@@ -51,8 +51,6 @@ import Data.Maybe (isJust)
 import Foreign.Storable
 import Foreign.Ptr (Ptr,plusPtr,castPtr)
 
-import Control.Compose (result)
-
 import Data.VectorSpace
 
 import Data.Proof.EQ
@@ -496,3 +494,10 @@ split' (Succ n) (a :< as) = (a :< bs, cs)
 --                TypeUnary.Vec.take :: IsNat n => Vec (n :+: m) a -> Vec n a
 --     at /Users/conal/Haskell/type-unary/src/TypeUnary/Vec.hs:488:1-18
 --   NB: `:+:' is a type function, and may not be injective
+
+{--------------------------------------------------------------------
+    Misc
+--------------------------------------------------------------------}
+
+result :: (b -> b') -> ((a -> b) -> (a -> b'))
+result = (.)

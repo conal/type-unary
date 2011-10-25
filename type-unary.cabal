@@ -1,7 +1,8 @@
 Name:                type-unary
-Version:             0.1.0
+Version:             0.1.1
 Cabal-Version:       >= 1.2
-Synopsis:            Type-level and typed unary natural numbers, vectors, inequality proofs
+Synopsis:            
+  Type-level and typed unary natural numbers, vectors, inequality proofs
 Category:            Data
 Description:
   Type-level and value-typed unary natural numbers, plus length-typed
@@ -19,8 +20,7 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base >=4 && < 5, functor-combo, TypeCompose
-                     , ty, vector-space
+  Build-Depends:       base >=4 && < 5, ty, vector-space
   Exposed-Modules:     TypeUnary.Vec
                        
   ghc-options:         -Wall
