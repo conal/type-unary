@@ -9,6 +9,7 @@ Description:
   packages. Perhaps consolidate. This one is extracted from Shady.
 Author:              Conal Elliott
 Maintainer:          conal@conal.net
+Homepage:            https://github.com/conal/type-unary
 Copyright:           (c) 2009-2011 by Conal Elliott
 License:             BSD3
 License-File:        COPYING
