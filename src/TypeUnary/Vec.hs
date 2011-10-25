@@ -240,31 +240,73 @@ vElems = foldr (:) []
 
 -}
 
+{--------------------------------------------------------------------
+    Instances for standard classes
+--------------------------------------------------------------------}
+
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
   fmap f (a :< u) = f a :< fmap f u
 
+instance IsNat n => Applicative (Vec n) where
+  pure  = pureV
+  (<*>) = applyV
 
--- | @n@ a vector length.
-class {- Typeable n => -} IsNat n where
-  nat    :: Nat n
-  pureV  :: a   -> Vec n a
-  elemsV :: [a] -> Vec n a
-  peekV  :: Storable a => Ptr a -> IO (Vec n a)
-  pokeV  :: Storable a => Ptr a -> Vec n a -> IO ()
+applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
+ZVec      `applyV` ZVec      = ZVec
+(f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
 
-{-
--- TODO: remove all but nat from the class. Define the rest outside of the
--- class by using nat. Then break this module into Nat and Vec. For instance,
+-- Without -fno-warn-incomplete-patterns above,
+-- the previous two instances lead to warnings about non-exhaustive
+-- pattern matches, although the other possibilities
+-- are type-incorrect.  According to SLPJ:
+-- 
+--   The overlap warning checker simply doesn't take account of GADTs.
+--   There's a long-standing project suggestion to fix this:
+--   http://hackage.haskell.org/trac/ghc/wiki/ProjectSuggestions .
+--   Perhaps a good GSoc project.
 
-pureV :: IsNat n => a -> Vec n a
-pureV = pureN nat
+instance Foldable (Vec n) where
+  foldr _  b ZVec     = b
+  foldr h b (a :< as) = a `h` foldr h b as
 
-pureN :: Nat n -> a -> Vec n a
-pureN Zero     _ = ZVec
-pureN (Succ n) a = a :< pureN n a
--}
+instance Traversable (Vec n) where
+  traverse _ ZVec      = pure ZVec
+  traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
 
+instance Eq a => Eq (Vec n a) where
+  ZVec    == ZVec    = True
+  a :< as == b :< bs = a==b && as==bs
+
+instance Ord a => Ord (Vec n a) where
+  ZVec      `compare` ZVec      = EQ
+  (a :< as) `compare` (b :< bs) =
+    case a `compare` b of
+      LT -> LT
+      GT -> GT
+      EQ -> as `compare` bs
+
+instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
+  { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
+
+instance (IsNat n, Num a) => VectorSpace (Vec n a) where
+  type Scalar (Vec n a) = Vec1 a
+  (*^) (s :< ZVec) = fmap (s *)
+
+instance (IsNat n, Num a) => InnerSpace (Vec n a) where
+   -- u <.> v = vec1 (sum (liftA2 (*) u v))
+   (<.>) = (result.result) (vec1 . sum) (liftA2 (*))
+
+instance (IsNat n, Storable a) => Storable (Vec n a) where
+   sizeOf    = const (fromIntegral (natToZ (nat :: Nat n))
+                      * sizeOf (undefined :: a))
+   alignment = const (alignment (undefined :: a))
+   peek      = peekV . castPtr
+   poke      = pokeV . castPtr
+
+{--------------------------------------------------------------------
+    IsNat
+--------------------------------------------------------------------}
 
 instance IsNat Z where
   nat          = Zero
@@ -292,35 +334,8 @@ instance IsNat n => IsNat (S n) where
 -- succPtr :: forall a. Storable a => Ptr a -> Ptr a
 -- succPtr p = p `plusPtr` sizeOf (undefined :: a)
 
-
 -- TODO: Optimize peekV, pokeV.  For instance, unroll the loop in the
 -- dictionary, remove the sizeOf dependence on @a@.
-
-applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
-ZVec      `applyV` ZVec      = ZVec
-(f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
-
-instance IsNat n => Applicative (Vec n) where
-  pure  = pureV
-  (<*>) = applyV
-
--- Without -fno-warn-incomplete-patterns above,
--- the previous two instances lead to warnings about non-exhaustive
--- pattern matches, although the other possibilities
--- are type-incorrect.  According to SLPJ:
--- 
---   The overlap warning checker simply doesn't take account of GADTs.
---   There's a long-standing project suggestion to fix this:
---   http://hackage.haskell.org/trac/ghc/wiki/ProjectSuggestions .
---   Perhaps a good GSoc project.
-
-instance Foldable (Vec n) where
-  foldr _  b ZVec     = b
-  foldr h b (a :< as) = a `h` foldr h b as
-
-instance Traversable (Vec n) where
-  traverse _ ZVec      = pure ZVec
-  traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
 
 infixl 1 <+>
 -- | Concatenation of vectors
@@ -335,6 +350,26 @@ indices (Succ n) = index0 :< fmap succI (indices n)
 
 -- TODO: Try reimplementing many Vec functions via foldr.  Warning: some
 -- (most?) will fail because they rely on a polymorphic combining function.
+
+-- | @n@ a vector length.
+class {- Typeable n => -} IsNat n where
+  nat    :: Nat n
+  pureV  :: a   -> Vec n a
+  elemsV :: [a] -> Vec n a
+  peekV  :: Storable a => Ptr a -> IO (Vec n a)
+  pokeV  :: Storable a => Ptr a -> Vec n a -> IO ()
+
+{-
+-- TODO: remove all but nat from the class. Define the rest outside of the
+-- class by using nat. Then break this module into Nat and Vec. For instance,
+
+pureV :: IsNat n => a -> Vec n a
+pureV = pureN nat
+
+pureN :: Nat n -> a -> Vec n a
+pureN Zero     _ = ZVec
+pureN (Succ n) a = a :< pureN n a
+-}
 
 -- Convenient nicknames
 
@@ -386,23 +421,6 @@ un3 (a :< b :< c :< ZVec) = (a,b,c)
 un4 :: Vec4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
-
-{--------------------------------------------------------------------
-    Vector space instances
---------------------------------------------------------------------}
-
-instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
-  { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
-
-instance (IsNat n, Num a) => VectorSpace (Vec n a) where
-  type Scalar (Vec n a) = Vec1 a
-  (*^) (s :< ZVec) = fmap (s *)
-
-instance (IsNat n, Num a) => InnerSpace (Vec n a) where
-   -- u <.> v = vec1 (sum (liftA2 (*) u v))
-   (<.>) = (result.result) (vec1 . sum) (liftA2 (*))
-
-
 {--------------------------------------------------------------------
     Extract elements
 --------------------------------------------------------------------}
@@ -443,32 +461,3 @@ t3 :: Four Char
 t3 = swizzle t2 t1
 -}
 
-
-
-{--------------------------------------------------------------------
-    Some instances.  More in Type.hs
---------------------------------------------------------------------}
-
-instance Eq a => Eq (Vec n a) where
-  ZVec    == ZVec    = True
-  a :< as == b :< bs = a==b && as==bs
-
-instance Ord a => Ord (Vec n a) where
-  ZVec      `compare` ZVec      = EQ
-  (a :< as) `compare` (b :< bs) =
-    case a `compare` b of
-      LT -> LT
-      GT -> GT
-      EQ -> as `compare` bs
-
-
-{--------------------------------------------------------------------
-    Storage
---------------------------------------------------------------------}
-
-instance (IsNat n, Storable a) => Storable (Vec n a) where
-   sizeOf    = const (fromIntegral (natToZ (nat :: Nat n))
-                      * sizeOf (undefined :: a))
-   alignment = const (alignment (undefined :: a))
-   peek      = peekV . castPtr
-   poke      = pokeV . castPtr
