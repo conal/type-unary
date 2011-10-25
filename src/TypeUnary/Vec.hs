@@ -29,7 +29,7 @@ module TypeUnary.Vec
   , Index(..), succI, index0, index1, index2, index3
   -- * Vectors
   , Vec(..), IsNat(..), (<+>), indices
-  , V0, V1, V2, V3, V4, vElems
+  , Vec0, Vec1, Vec2, Vec3, Vec4, vElems
   , vec1, vec2, vec3, vec4
   , un1, un2, un3, un4
   , get0, get1, get2, get3
@@ -315,39 +315,39 @@ indices (Succ n) = index0 :< fmap succI (indices n)
 
 -- Convenient nicknames
 
-type V0 = Vec N0
-type V1 = Vec N1 
-type V2 = Vec N2
-type V3 = Vec N3
-type V4 = Vec N4
+type Vec0 = Vec N0
+type Vec1 = Vec N1 
+type Vec2 = Vec N2
+type Vec3 = Vec N3
+type Vec4 = Vec N4
 
 
-vec1 :: a -> V1 a
+vec1 :: a -> Vec1 a
 vec1 a = a :< ZVec
 
-vec2 :: a -> a -> V2 a
+vec2 :: a -> a -> Vec2 a
 vec2 a b = a :< vec1 b
 
-vec3 :: a -> a -> a -> V3 a
+vec3 :: a -> a -> a -> Vec3 a
 vec3 a b c = a :< vec2 b c
 
-vec4 :: a -> a -> a -> a -> V4 a
+vec4 :: a -> a -> a -> a -> Vec4 a
 vec4 a b c d = a :< vec3 b c d
 
 -- | Extract element
-un1 :: V1 a -> a
+un1 :: Vec1 a -> a
 un1 (a :< ZVec) = a
 
 -- | Extract elements
-un2 :: V2 a -> (a,a)
+un2 :: Vec2 a -> (a,a)
 un2 (a :< b :< ZVec) = (a,b)
 
 -- | Extract elements
-un3 :: V3 a -> (a,a,a)
+un3 :: Vec3 a -> (a,a,a)
 un3 (a :< b :< c :< ZVec) = (a,b,c)
 
 -- | Extract elements
-un4 :: V4 a -> (a,a,a,a)
+un4 :: Vec4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
 
@@ -359,7 +359,7 @@ instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
   { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
 
 instance (IsNat n, Num a) => VectorSpace (Vec n a) where
-  type Scalar (Vec n a) = V1 a
+  type Scalar (Vec n a) = Vec1 a
   (*^) (s :< ZVec) = fmap (s *)
 
 instance (IsNat n, Num a) => InnerSpace (Vec n a) where
@@ -372,15 +372,15 @@ instance (IsNat n, Num a) => InnerSpace (Vec n a) where
 --------------------------------------------------------------------}
 
 -- | General indexing, taking a proof that the index is within bounds.
-get :: Index n -> Vec n a -> V1 a
+get :: Index n -> Vec n a -> Vec1 a
 get (Index ZLess     Zero    ) (a :< _)  = vec1 a
 get (Index (SLess p) (Succ m)) (_ :< as) = get (Index p m) as
 
 
-get0 :: Vec (S n)             a -> V1 a
-get1 :: Vec (S (S n))         a -> V1 a
-get2 :: Vec (S (S (S n)))     a -> V1 a
-get3 :: Vec (S (S (S (S n)))) a -> V1 a
+get0 :: Vec (S n)             a -> Vec1 a
+get1 :: Vec (S (S n))         a -> Vec1 a
+get2 :: Vec (S (S (S n)))     a -> Vec1 a
+get3 :: Vec (S (S (S (S n)))) a -> Vec1 a
 
 get0 = get index0
 get1 = get index1
