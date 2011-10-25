@@ -21,7 +21,8 @@
 module TypeUnary.Vec
   (
   -- * Type-level numbers
-    Z, S, (:+:), N0, N1, N2, N3, N4
+    Z, S, (:+:)
+  , N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16
   -- * Typed natural numbers
   , Nat(..), zero, one, two, three, four
   , withIsNat, natSucc, natIsNat
@@ -29,7 +30,8 @@ module TypeUnary.Vec
   , Index(..), succI, index0, index1, index2, index3
   -- * Vectors
   , Vec(..), IsNat(..), (<+>), indices
-  , Vec0, Vec1, Vec2, Vec3, Vec4, vElems
+  , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
+  , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4
   , un1, un2, un3, un4
   , get0, get1, get2, get3
@@ -75,12 +77,25 @@ type family a :+: b
 type instance Z   :+: b = b
 type instance S a :+: b = S (a :+: b)
 
-type N0 = Z
-type N1 = S N0
-type N2 = S N1
-type N3 = S N2
-type N4 = S N3
+type N0  = Z
+type N1  = S N0
+type N2  = S N1
+type N3  = S N2
+type N4  = S N3
+type N5  = S N4
+type N6  = S N5
+type N7  = S N6
+type N8  = S N7
+type N9  = S N8
+type N10 = S N9
+type N11 = S N10
+type N12 = S N11
+type N13 = S N12
+type N14 = S N13
+type N15 = S N14
+type N16 = S N15
 
+-- putStrLn $ unlines ["type N" ++ show (n+1) ++ " = S N" ++ show n | n <- [0..15]]
 
 {--------------------------------------------------------------------
     Typed natural numbers
@@ -216,9 +231,13 @@ data Vec :: * -> * -> * where
 
 -- TODO: Add strictness annotations ("!") to (:<) arguments & compare
 
+{-
+
 {-# DEPRECATED vElems "Use Data.Foldable.toList instead" #-}
 vElems :: Vec n a -> [a]
 vElems = foldr (:) []
+
+-}
 
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
@@ -315,12 +334,25 @@ indices (Succ n) = index0 :< fmap succI (indices n)
 
 -- Convenient nicknames
 
-type Vec0 = Vec N0
-type Vec1 = Vec N1 
-type Vec2 = Vec N2
-type Vec3 = Vec N3
-type Vec4 = Vec N4
+type Vec0  = Vec N0
+type Vec1  = Vec N1
+type Vec2  = Vec N2
+type Vec3  = Vec N3
+type Vec4  = Vec N4
+type Vec5  = Vec N5
+type Vec6  = Vec N6
+type Vec7  = Vec N7
+type Vec8  = Vec N8
+type Vec9  = Vec N9
+type Vec10 = Vec N10
+type Vec11 = Vec N11
+type Vec12 = Vec N12
+type Vec13 = Vec N13
+type Vec14 = Vec N14
+type Vec15 = Vec N15
+type Vec16 = Vec N16
 
+-- putStr $ unlines ["type Vec" ++ show n ++ " = Vec N" ++ show n | n <- [0..16]]
 
 vec1 :: a -> Vec1 a
 vec1 a = a :< ZVec
