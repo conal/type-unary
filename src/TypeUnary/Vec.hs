@@ -21,7 +21,7 @@
 module TypeUnary.Vec
   (
   -- * Type-level numbers
-    Z, S, (:+:), ZeroT, OneT, TwoT, ThreeT, FourT
+    Z, S, (:+:), N0, N1, N2, N3, N4
   -- * Typed natural numbers
   , Nat(..), zero, one, two, three, four
   , withIsNat, natSucc, natIsNat
@@ -29,7 +29,7 @@ module TypeUnary.Vec
   , Index(..), succI, index0, index1, index2, index3
   -- * Vectors
   , Vec(..), IsNat(..), (<+>), indices
-  , Zero, One, Two, Three, Four, vElems
+  , V0, V1, V2, V3, V4, vElems
   , vec1, vec2, vec3, vec4
   , un1, un2, un3, un4
   , get0, get1, get2, get3
@@ -75,11 +75,11 @@ type family a :+: b
 type instance Z   :+: b = b
 type instance S a :+: b = S (a :+: b)
 
-type ZeroT  = Z
-type OneT   = S ZeroT
-type TwoT   = S OneT
-type ThreeT = S TwoT
-type FourT  = S ThreeT
+type N0  = Z
+type N1   = S N0
+type N2   = S N1
+type N3 = S N2
+type N4  = S N3
 
 
 {--------------------------------------------------------------------
@@ -137,19 +137,19 @@ natAdd :: Nat m -> Nat n -> Nat (m :+: n)
 Zero   `natAdd` n = n
 Succ m `natAdd` n = natSucc (m `natAdd` n)
 
-zero :: Nat ZeroT
+zero :: Nat N0
 zero = Zero
 
-one :: Nat OneT
+one :: Nat N1
 one = Succ zero
 
-two :: Nat TwoT
+two :: Nat N2
 two = Succ one
 
-three :: Nat ThreeT
+three :: Nat N3
 three = Succ two
 
-four :: Nat FourT
+four :: Nat N4
 four = Succ three
 
 
@@ -315,39 +315,39 @@ indices (Succ n) = index0 :< fmap succI (indices n)
 
 -- Convenient nicknames
 
-type Zero  = Vec ZeroT
-type One   = Vec OneT
-type Two   = Vec TwoT
-type Three = Vec ThreeT
-type Four  = Vec FourT
+type V0 = Vec N0
+type V1 = Vec N1 
+type V2 = Vec N2
+type V3 = Vec N3
+type V4 = Vec N4
 
 
-vec1 :: a -> One a
+vec1 :: a -> V1 a
 vec1 a = a :< ZVec
 
-vec2 :: a -> a -> Two a
+vec2 :: a -> a -> V2 a
 vec2 a b = a :< vec1 b
 
-vec3 :: a -> a -> a -> Three a
+vec3 :: a -> a -> a -> V3 a
 vec3 a b c = a :< vec2 b c
 
-vec4 :: a -> a -> a -> a -> Four a
+vec4 :: a -> a -> a -> a -> V4 a
 vec4 a b c d = a :< vec3 b c d
 
 -- | Extract element
-un1 :: One a -> a
+un1 :: V1 a -> a
 un1 (a :< ZVec) = a
 
 -- | Extract elements
-un2 :: Two a -> (a,a)
+un2 :: V2 a -> (a,a)
 un2 (a :< b :< ZVec) = (a,b)
 
 -- | Extract elements
-un3 :: Three a -> (a,a,a)
+un3 :: V3 a -> (a,a,a)
 un3 (a :< b :< c :< ZVec) = (a,b,c)
 
 -- | Extract elements
-un4 :: Four a -> (a,a,a,a)
+un4 :: V4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
 
@@ -359,7 +359,7 @@ instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
   { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
 
 instance (IsNat n, Num a) => VectorSpace (Vec n a) where
-  type Scalar (Vec n a) = One a -- note 'One'
+  type Scalar (Vec n a) = V1 a
   (*^) (s :< ZVec) = fmap (s *)
 
 instance (IsNat n, Num a) => InnerSpace (Vec n a) where
@@ -372,15 +372,15 @@ instance (IsNat n, Num a) => InnerSpace (Vec n a) where
 --------------------------------------------------------------------}
 
 -- | General indexing, taking a proof that the index is within bounds.
-get :: Index n -> Vec n a -> One a
+get :: Index n -> Vec n a -> V1 a
 get (Index ZLess     Zero    ) (a :< _)  = vec1 a
 get (Index (SLess p) (Succ m)) (_ :< as) = get (Index p m) as
 
 
-get0 :: Vec (S n)             a -> One a
-get1 :: Vec (S (S n))         a -> One a
-get2 :: Vec (S (S (S n)))     a -> One a
-get3 :: Vec (S (S (S (S n)))) a -> One a
+get0 :: Vec (S n)             a -> V1 a
+get1 :: Vec (S (S n))         a -> V1 a
+get2 :: Vec (S (S (S n)))     a -> V1 a
+get3 :: Vec (S (S (S (S n)))) a -> V1 a
 
 get0 = get index0
 get1 = get index1
@@ -399,7 +399,7 @@ t1 :: Three Char
 t1 = elemsV "abc"
      -- 'a' :< 'b' :< 'c' :< ZVec
 
-t2 :: Four (Index ThreeT)
+t2 :: Four (Index N3)
 t2 = elemsV [index2, index0 ,index1, index2]
 
 -- 'c' :< 'a' :< 'b' :< 'c' :< ZVec
