@@ -44,6 +44,7 @@ import Prelude hiding (foldr,sum)
 
 import Control.Applicative (Applicative(..),liftA2,(<$>))
 import Data.Foldable (Foldable(..),sum)
+import Data.Traversable (Traversable(..))
 import Data.Maybe (isJust)
 -- import Data.Typeable
 
@@ -317,6 +318,9 @@ instance Foldable (Vec n) where
   foldr _  b ZVec     = b
   foldr h b (a :< as) = a `h` foldr h b as
 
+instance Traversable (Vec n) where
+  traverse _ ZVec      = pure ZVec
+  traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
 
 infixl 1 <+>
 -- | Concatenation of vectors
