@@ -8,7 +8,7 @@
 {-# OPTIONS_GHC -Wall -fno-warn-incomplete-patterns #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  TypeNat.Vec
+-- Module      :  TypeUnary.Vec
 -- Copyright   :  (c) Conal Elliott 2009
 -- License     :  BSD3
 -- 
@@ -18,7 +18,7 @@
 -- Experiment in length-typed vectors
 ----------------------------------------------------------------------
 
-module TypeNat.Vec
+module TypeUnary.Vec
   (
   -- * Type-level numbers
     Z, S, (:+:), ZeroT, OneT, TwoT, ThreeT, FourT
@@ -52,8 +52,6 @@ import Control.Compose (result)
 
 import Data.VectorSpace
 
-
--- import TypeNat.Misc (Sink)
 import Data.Proof.EQ
 
 
