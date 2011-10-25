@@ -75,11 +75,11 @@ type family a :+: b
 type instance Z   :+: b = b
 type instance S a :+: b = S (a :+: b)
 
-type N0  = Z
-type N1   = S N0
-type N2   = S N1
+type N0 = Z
+type N1 = S N0
+type N2 = S N1
 type N3 = S N2
-type N4  = S N3
+type N4 = S N3
 
 
 {--------------------------------------------------------------------
