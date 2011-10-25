@@ -172,18 +172,18 @@ instance Eq (Index lim) where
   Index _ n == Index _ n' = isJust (n `natEq` n')
 
 succI :: Index m -> Index (S m)
-succI (Index p m) = Index (SLess p) (Succ m)
+succI (Index p n) = Index (SLess p) (Succ n)
 
-index0 :: Index (S n)
+index0 :: Index (S m)
 index0 = Index ZLess Zero
 
-index1 :: Index (S (S n))
+index1 :: Index (S (S m))
 index1 = succI index0
 
-index2 :: Index (S (S (S n)))
+index2 :: Index (S (S (S m)))
 index2 = succI index1
 
-index3 :: Index (S (S (S (S n))))
+index3 :: Index (S (S (S (S m))))
 index3 = succI index2
 
 
