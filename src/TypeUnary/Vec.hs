@@ -482,3 +482,17 @@ split' (Succ n) (a :< as) = (a :< bs, cs)
 --   (elemsV [3,3,3,3,3,3,3],elemsV [3,3,3,3])
 -- 
 -- Note that 'pure 3' was inferred to have type 'Vec11 Int'.
+
+-- I'd like to define take & drop similarly, e.g.,
+--
+--   take :: IsNat n => Vec (n :+: m) a -> Vec n a
+--   take = fst . split
+-- 
+-- However,
+-- 
+--   Could not deduce ((n :+: m0) ~ (n :+: m))
+--   from the context (IsNat n)
+--     bound by the type signature for
+--                TypeUnary.Vec.take :: IsNat n => Vec (n :+: m) a -> Vec n a
+--     at /Users/conal/Haskell/type-unary/src/TypeUnary/Vec.hs:488:1-18
+--   NB: `:+:' is a type function, and may not be injective
