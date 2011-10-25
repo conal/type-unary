@@ -35,7 +35,7 @@ module TypeUnary.Vec
   , vec1, vec2, vec3, vec4
   , un1, un2, un3, un4
   , get0, get1, get2, get3
-  , get, swizzle
+  , get, swizzle, split
   ) where
 
 import Prelude hiding (foldr,sum)
@@ -43,7 +43,7 @@ import Prelude hiding (foldr,sum)
 -- #include "Typeable.h"
 
 import Control.Applicative (Applicative(..),liftA2,(<$>))
-import Data.Foldable (Foldable(..),sum)
+import Data.Foldable (Foldable(..),toList,sum)
 import Data.Traversable (Traversable(..))
 import Data.Maybe (isJust)
 -- import Data.Typeable
@@ -244,6 +244,21 @@ vElems = foldr (:) []
     Instances for standard classes
 --------------------------------------------------------------------}
 
+instance Eq a => Eq (Vec n a) where
+  ZVec    == ZVec    = True
+  a :< as == b :< bs = a==b && as==bs
+
+instance Ord a => Ord (Vec n a) where
+  ZVec      `compare` ZVec      = EQ
+  (a :< as) `compare` (b :< bs) =
+    case a `compare` b of
+      LT -> LT
+      GT -> GT
+      EQ -> as `compare` bs
+
+instance Show a => Show (Vec n a) where
+  show v = "elemsV " ++ show (toList v)
+
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
   fmap f (a :< u) = f a :< fmap f u
@@ -273,18 +288,6 @@ instance Foldable (Vec n) where
 instance Traversable (Vec n) where
   traverse _ ZVec      = pure ZVec
   traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
-
-instance Eq a => Eq (Vec n a) where
-  ZVec    == ZVec    = True
-  a :< as == b :< bs = a==b && as==bs
-
-instance Ord a => Ord (Vec n a) where
-  ZVec      `compare` ZVec      = EQ
-  (a :< as) `compare` (b :< bs) =
-    case a `compare` b of
-      LT -> LT
-      GT -> GT
-      EQ -> as `compare` bs
 
 instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
   { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
@@ -358,6 +361,8 @@ class {- Typeable n => -} IsNat n where
   elemsV :: [a] -> Vec n a
   peekV  :: Storable a => Ptr a -> IO (Vec n a)
   pokeV  :: Storable a => Ptr a -> Vec n a -> IO ()
+
+-- Convert from vector to list via Data.Foldable.toList
 
 {-
 -- TODO: remove all but nat from the class. Define the rest outside of the
@@ -461,3 +466,19 @@ t3 :: Four Char
 t3 = swizzle t2 t1
 -}
 
+-- | Split a vector
+split :: IsNat n => Vec (n :+: m) a -> (Vec n a, Vec m a)
+split = split' nat
+
+split' :: Nat n -> Vec (n :+: m) a -> (Vec n a, Vec m a)
+split' Zero v             = (ZVec, v)
+split' (Succ n) (a :< as) = (a :< bs, cs)
+ where
+   (bs,cs) = split' n as
+
+-- For instance,
+-- 
+--   *TypeUnary.Vec> split (pure 3) :: (Vec7 Int, Vec4 Int)
+--   (elemsV [3,3,3,3,3,3,3],elemsV [3,3,3,3])
+-- 
+-- Note that 'pure 3' was inferred to have type 'Vec11 Int'.
