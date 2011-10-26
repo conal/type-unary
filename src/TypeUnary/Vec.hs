@@ -497,6 +497,26 @@ split' (Succ n) (a :< as) = (a :< bs, cs)
 --     at /Users/conal/Haskell/type-unary/src/TypeUnary/Vec.hs:488:1-18
 --   NB: `:+:' is a type function, and may not be injective
 
+{-
+
+-- Reversal. Thinking about this one. Currently thwarted by missing
+-- knowledge about numbers in the type-checker. Would be easy with
+-- built-in type-level naturals.
+
+-- | Reverse a vector
+reverseV :: Vec n a -> Vec n a
+reverseV = reverse' nat ZVec
+
+--  Couldn't match type `n' with `n :+: Z'
+
+-- Reverse na and append to ma
+reverse' :: Nat n -> Vec m a -> Vec n a -> Vec (n :+: m) a
+reverse' Zero     ma ZVec      = ma
+reverse' (Succ n) ma (a :< as) = reverse' n (a :< ma) as
+
+-- Could not deduce ((n1 :+: S m) ~ S (n1 :+: m))
+-}
+
 {--------------------------------------------------------------------
     Conversion to vectors
 --------------------------------------------------------------------}
