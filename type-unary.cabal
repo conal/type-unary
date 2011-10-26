@@ -1,5 +1,5 @@
 Name:                type-unary
-Version:             0.1.1
+Version:             0.1.2
 Cabal-Version:       >= 1.2
 Synopsis:            
   Type-level and typed unary natural numbers, vectors, inequality proofs
