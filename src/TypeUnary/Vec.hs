@@ -4,6 +4,7 @@
            , UndecidableInstances
            , ScopedTypeVariables, CPP
            , RankNTypes
+           , MultiParamTypeClasses, FunctionalDependencies
   #-}
 {-# OPTIONS_GHC -Wall -fno-warn-incomplete-patterns #-}
 ----------------------------------------------------------------------
@@ -36,6 +37,7 @@ module TypeUnary.Vec
   , un1, un2, un3, un4
   , get0, get1, get2, get3
   , get, swizzle, split
+  , ToVec(..)
   ) where
 
 import Prelude hiding (foldr,sum)
@@ -494,6 +496,15 @@ split' (Succ n) (a :< as) = (a :< bs, cs)
 --                TypeUnary.Vec.take :: IsNat n => Vec (n :+: m) a -> Vec n a
 --     at /Users/conal/Haskell/type-unary/src/TypeUnary/Vec.hs:488:1-18
 --   NB: `:+:' is a type function, and may not be injective
+
+{--------------------------------------------------------------------
+    Conversion to vectors
+--------------------------------------------------------------------}
+
+class ToVec c n a | c -> n a where
+  toVec :: c -> Vec n a
+
+instance ToVec (Vec n a) n a where toVec = id
 
 {--------------------------------------------------------------------
     Misc
