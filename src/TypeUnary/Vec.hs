@@ -35,8 +35,8 @@ module TypeUnary.Vec
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4
   , un1, un2, un3, un4
-  , get0, get1, get2, get3
-  , get, swizzle, split
+  , get, get0, get1, get2, get3
+  , swizzle, split
   , ToVec(..)
   ) where
 
@@ -436,15 +436,14 @@ un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 --------------------------------------------------------------------}
 
 -- | General indexing, taking a proof that the index is within bounds.
-get :: Index n -> Vec n a -> Vec1 a
-get (Index ZLess     Zero    ) (a :< _)  = vec1 a
+get :: Index n -> Vec n a -> a
+get (Index ZLess     Zero    ) (a :< _)  = a
 get (Index (SLess p) (Succ m)) (_ :< as) = get (Index p m) as
 
-
-get0 :: Vec (S n)             a -> Vec1 a
-get1 :: Vec (S (S n))         a -> Vec1 a
-get2 :: Vec (S (S (S n)))     a -> Vec1 a
-get3 :: Vec (S (S (S (S n)))) a -> Vec1 a
+get0 :: Vec (N1 :+: n) a -> a   -- ^ Get first  element
+get1 :: Vec (N2 :+: n) a -> a   -- ^ Get second element
+get2 :: Vec (N3 :+: n) a -> a   -- ^ Get third  element
+get3 :: Vec (N4 :+: n) a -> a   -- ^ Get fourth element
 
 get0 = get index0
 get1 = get index1
@@ -455,7 +454,7 @@ get3 = get index3
 -- | Swizzling.  Extract multiple elements simultaneously.
 swizzle :: Vec n (Index m) -> Vec m a -> Vec n a
 swizzle ZVec        _ = ZVec
-swizzle (ix :< ixs) v = un1 (get ix v) :< swizzle ixs v
+swizzle (ix :< ixs) v = get ix v :< swizzle ixs v
 
 {-
 -- 'a' :< 'b' :< 'c' :< ZVec
