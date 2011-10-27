@@ -190,16 +190,16 @@ instance Eq (Index lim) where
 succI :: Index m -> Index (S m)
 succI (Index p n) = Index (SLess p) (Succ n)
 
-index0 :: Index (S m)
+index0 :: Index (N1 :+: m)
 index0 = Index ZLess Zero
 
-index1 :: Index (S (S m))
+index1 :: Index (N2 :+: m)
 index1 = succI index0
 
-index2 :: Index (S (S (S m)))
+index2 :: Index (N3 :+: m)
 index2 = succI index1
 
-index3 :: Index (S (S (S (S m))))
+index3 :: Index (N4 :+: m)
 index3 = succI index2
 
 
@@ -258,6 +258,11 @@ instance Ord a => Ord (Vec n a) where
 
 instance Show a => Show (Vec n a) where
   show v = "elemsV " ++ show (toList v)
+
+-- 2011-10-26: There was an orphan Show Vec instance in shady-gen's
+-- Shady.Language.Type, which conflicted with the Show instance above. To
+-- do: check whether this change broke Shady's code generation. Maybe not,
+-- if the code generation uses Pretty instead of Show.
 
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
