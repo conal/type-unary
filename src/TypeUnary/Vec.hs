@@ -225,10 +225,12 @@ data Vec :: * -> * -> * where
 --   show ZVec = "ZVec"
 --   show (a :< v) = show a ++ " :< " ++ show v
 
+{-
 -- | Enumerate the elements of a vector.  See also 'elemsV'
--- vElems :: Vec n a -> [a]
--- vElems ZVec      = []
--- vElems (a :< as) = a : vElems as
+vElems :: Vec n a -> [a]
+vElems ZVec      = []
+vElems (a :< as) = a : vElems as
+-}
 
 -- TODO: Add strictness annotations ("!") to (:<) arguments & compare
 
