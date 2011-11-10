@@ -30,7 +30,7 @@ module TypeUnary.Vec
   , natToZ, natEq, natAdd, (:<:)
   , Index(..), succI, index0, index1, index2, index3
   -- * Vectors
-  , Vec(..), IsNat(..), (<+>), indices
+  , Vec(..), headV, tailV, joinV, IsNat(..), (<+>), indices
   , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4
@@ -215,6 +215,14 @@ data Vec :: * -> * -> * where
   ZVec :: Vec Z a                       -- -- ^ zero vector
   (:<) :: a -> Vec n a -> Vec (S n) a   -- -- ^ vector cons
 
+-- | Type-safe head for vectors
+headV :: Vec (S n) a -> a
+headV (a :< _) = a
+
+-- | Type-safe tail for vectors
+tailV :: Vec (S n) a -> Vec n a
+tailV (_ :< as') = as'
+
 -- TODO: when haddock is fixed, reinstate per-ctor haddock comments and
 -- remove the constructor comments in the data doc.
 
@@ -287,6 +295,15 @@ ZVec      `applyV` ZVec      = ZVec
 --   There's a long-standing project suggestion to fix this:
 --   http://hackage.haskell.org/trac/ghc/wiki/ProjectSuggestions .
 --   Perhaps a good GSoc project.
+
+instance IsNat n => Monad (Vec n) where
+  return = pure
+  v >>= f = joinV (f <$> v)
+
+-- | Equivalent to monad @join@ for vectors
+joinV :: Vec n (Vec n a) -> Vec n a
+joinV ZVec = ZVec
+joinV ((a :< _) :< vs) = a :< joinV (tailV <$> vs)
 
 instance Foldable (Vec n) where
   foldr _  b ZVec     = b
