@@ -544,10 +544,18 @@ reverse' (Succ n) ma (a :< as) = reverse' n (a :< ma) as
     Conversion to vectors
 --------------------------------------------------------------------}
 
-class ToVec c n a | c -> n a where
+class ToVec c n a where
   toVec :: c -> Vec n a
 
 instance ToVec (Vec n a) n a where toVec = id
+
+instance IsNat n => ToVec [a] n a where
+  toVec = toVecL nat
+
+toVecL :: Nat n -> [a] -> Vec n a
+toVecL Zero [] = ZVec
+toVecL (Succ m) (a:as) = a :< toVecL m as
+toVecL _ _ = error "toVecL: length mismatch"
 
 {--------------------------------------------------------------------
     Misc
