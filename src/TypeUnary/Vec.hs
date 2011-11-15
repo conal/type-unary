@@ -33,7 +33,7 @@ module TypeUnary.Vec
   , Vec(..), headV, tailV, joinV, IsNat(..), (<+>), indices
   , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
-  , vec1, vec2, vec3, vec4
+  , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
   , un1, un2, un3, un4
   , get, get0, get1, get2, get3
   , swizzle, split
@@ -433,6 +433,18 @@ vec3 a b c = a :< vec2 b c
 
 vec4 :: a -> a -> a -> a -> Vec4 a
 vec4 a b c d = a :< vec3 b c d
+
+vec5 :: a -> a -> a -> a -> a -> Vec5 a
+vec5 a b c d e = a :< vec4 b c d e
+
+vec6 :: a -> a -> a -> a -> a -> a -> Vec6 a
+vec6 a b c d e f = a :< vec5 b c d e f
+
+vec7 :: a -> a -> a -> a -> a -> a -> a -> Vec7 a
+vec7 a b c d e f g = a :< vec6 b c d e f g
+
+vec8 :: a -> a -> a -> a -> a -> a -> a -> a -> Vec8 a
+vec8 a b c d e f g h = a :< vec7 b c d e f g h
 
 -- | Extract element
 un1 :: Vec1 a -> a
