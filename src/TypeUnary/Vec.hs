@@ -36,7 +36,7 @@ module TypeUnary.Vec
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
   , un1, un2, un3, un4
   , get, get0, get1, get2, get3
-  , swizzle, split
+  , swizzle, split, deleteV
   , ToVec(..)
   ) where
 
@@ -551,6 +551,14 @@ reverse' (Succ n) ma (a :< as) = reverse' n (a :< ma) as
 
 -- Could not deduce ((n1 :+: S m) ~ S (n1 :+: m))
 -}
+
+-- | Delete exactly one occurrence of an element from a vector, raising an
+-- error if the element isn't present.
+deleteV :: Eq a => a -> Vec (S n) a -> Vec n a
+deleteV b (a :< as) | a == b = as
+deleteV _ (_ :< ZVec)        = error "deleteV: did not find element"
+deleteV b (a :< as@(_:<_))   = a :< deleteV b as
+
 
 {--------------------------------------------------------------------
     Conversion to vectors
