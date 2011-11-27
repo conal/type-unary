@@ -36,6 +36,7 @@ module TypeUnary.Vec
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
   , un1, un2, un3, un4
   , get, get0, get1, get2, get3
+  , set, set0, set1, set2, set3
   , swizzle, split, deleteV
   , ToVec(..)
   ) where
@@ -463,7 +464,7 @@ un4 :: Vec4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
 {--------------------------------------------------------------------
-    Extract elements
+    Extract and set elements
 --------------------------------------------------------------------}
 
 -- | General indexing, taking a proof that the index is within bounds.
@@ -480,6 +481,22 @@ get0 = get index0
 get1 = get index1
 get2 = get index2
 get3 = get index3
+
+
+-- | General indexing, taking a proof that the index is within bounds.
+set :: Index n -> a -> Vec n a -> Vec n a
+set (Index ZLess     Zero    ) a' (_ :< as) = a' :< as
+set (Index (SLess p) (Succ m)) a' (a :< as) = a  :< set (Index p m) a' as
+
+set0 :: a -> Vec (N1 :+: n) a -> Vec (N1 :+: n) a   -- ^ Set first element
+set1 :: a -> Vec (N2 :+: n) a -> Vec (N2 :+: n) a   -- ^ Set second element
+set2 :: a -> Vec (N3 :+: n) a -> Vec (N3 :+: n) a   -- ^ Set third element
+set3 :: a -> Vec (N4 :+: n) a -> Vec (N4 :+: n) a   -- ^ Set fourth element
+
+set0 = set index0
+set1 = set index1
+set2 = set index2
+set3 = set index3
 
 
 -- | Swizzling.  Extract multiple elements simultaneously.
