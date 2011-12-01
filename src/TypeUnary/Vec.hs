@@ -21,23 +21,16 @@
 
 module TypeUnary.Vec
   (
-  -- * Type-level numbers
-    Z, S, (:+:)
-  , N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16
-  -- * Typed natural numbers
-  , Nat(..), zero, one, two, three, four
-  , withIsNat, natSucc, natIsNat
-  , natToZ, natEq, natAdd, (:<:)
-  , Index(..), succI, index0, index1, index2, index3
+    module TypeUnary.Nat
   -- * Vectors
-  , Vec(..), headV, tailV, joinV, IsNat(..), (<+>), indices
+  , Vec(..), headV, tailV, joinV, (<+>), indices
   , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
   , un1, un2, un3, un4
   , get, get0, get1, get2, get3
   , set, set0, set1, set2, set3
-  , swizzle, split, deleteV
+  , swizzle, split, deleteV, elemsV
   , ToVec(..)
   ) where
 
@@ -48,7 +41,6 @@ import Prelude hiding (foldr,sum)
 import Control.Applicative (Applicative(..),liftA2,(<$>))
 import Data.Foldable (Foldable(..),toList,sum)
 import Data.Traversable (Traversable(..))
-import Data.Maybe (isJust)
 -- import Data.Typeable
 
 import Foreign.Storable
@@ -56,153 +48,7 @@ import Foreign.Ptr (Ptr,plusPtr,castPtr)
 
 import Data.VectorSpace
 
-import Data.Proof.EQ
-
-
-{--------------------------------------------------------------------
-    Type-level numbers
---------------------------------------------------------------------}
-
--- | Type-level representation of zero
-data Z
--- | Type-level representation of successor
-data S n
-
--- INSTANCE_TYPEABLE0(Z,zTC ,"Z")
--- INSTANCE_TYPEABLE1(S,sTC ,"S")
-
-infixl 6 :+:
-
--- | Sum of type-level numbers
-type family a :+: b
-
-type instance Z   :+: b = b
-type instance S a :+: b = S (a :+: b)
-
-type N0  = Z
-type N1  = S N0
-type N2  = S N1
-type N3  = S N2
-type N4  = S N3
-type N5  = S N4
-type N6  = S N5
-type N7  = S N6
-type N8  = S N7
-type N9  = S N8
-type N10 = S N9
-type N11 = S N10
-type N12 = S N11
-type N13 = S N12
-type N14 = S N13
-type N15 = S N14
-type N16 = S N15
-
--- putStrLn $ unlines ["type N" ++ show (n+1) ++ " = S N" ++ show n | n <- [0..15]]
-
-{--------------------------------------------------------------------
-    Typed natural numbers
---------------------------------------------------------------------}
-
--- Natural numbers
-data Nat :: * -> * where
-  Zero :: Nat Z
-  Succ :: IsNat n => Nat n -> Nat (S n)
-
-instance Show (Nat n) where show = show . natToZ
-
-withIsNat :: (IsNat n => Nat n -> a) -> (Nat n -> a)
-withIsNat p Zero     = p Zero
-withIsNat p (Succ n) = p (Succ n)
-
--- Helper for when we don't have a convenient proof of IsNat n.
-natSucc :: Nat n -> Nat (S n)
-natSucc = withIsNat Succ 
-
-natIsNat :: Nat n -> (IsNat n => Nat n)
-natIsNat Zero     = Zero
-natIsNat (Succ n) = Succ n
-
-{-
-
--- Another approach (also works):
-
-data NatIsNat :: * -> * where
-  NatIsNat :: IsNat n' => Nat n' -> (n :=: n') -> NatIsNat n
-
-natIsNat' :: Nat n -> NatIsNat n
-natIsNat' Zero     = NatIsNat Zero Refl
-natIsNat' (Succ n) = NatIsNat (Succ n) Refl
-
-withIsNat' :: (IsNat n => Nat n -> a) -> (Nat n -> a)
-withIsNat' p n = case natIsNat' n of
-                   NatIsNat n' Refl -> p n'
--}
-
--- | Interpret a 'Nat' as an 'Integer'
-natToZ :: Nat n -> Integer
-natToZ Zero     = 0
-natToZ (Succ n) = (succ . natToZ) n
-
--- | Equality test
-natEq :: Nat m -> Nat n -> Maybe (m :=: n)
-Zero   `natEq` Zero   = Just Refl
-Succ m `natEq` Succ n = liftEq <$> (m `natEq` n)
-_      `natEq` _      = Nothing
-
--- | Sum of naturals
-natAdd :: Nat m -> Nat n -> Nat (m :+: n)
-Zero   `natAdd` n = n
-Succ m `natAdd` n = natSucc (m `natAdd` n)
-
-zero :: Nat N0
-zero = Zero
-
-one :: Nat N1
-one = Succ zero
-
-two :: Nat N2
-two = Succ one
-
-three :: Nat N3
-three = Succ two
-
-four :: Nat N4
-four = Succ three
-
-
-infix 4 :<:
-
--- | Proof that @m < n@
-data m :<: n where
-  ZLess :: Z :<: S n
-  SLess :: m :<: n -> S m :<: S n
-
--- data Index :: * -> * where
---   Index :: (n :<: lim) -> Nat n -> Index lim
-
--- or
-
--- | A number under the given limit, with proof
-data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
-
-instance Eq (Index lim) where
-  Index _ n == Index _ n' = isJust (n `natEq` n')
-
-succI :: Index m -> Index (S m)
-succI (Index p n) = Index (SLess p) (Succ n)
-
-index0 :: Index (N1 :+: m)
-index0 = Index ZLess Zero
-
-index1 :: Index (N2 :+: m)
-index1 = succI index0
-
-index2 :: Index (N3 :+: m)
-index2 = succI index1
-
-index3 :: Index (N4 :+: m)
-index3 = succI index2
-
+import TypeUnary.Nat
 
 {--------------------------------------------------------------------
     Vectors
@@ -283,6 +129,13 @@ instance IsNat n => Applicative (Vec n) where
   pure  = pureV
   (<*>) = applyV
 
+pureV :: IsNat n => a -> Vec n a
+pureV = pureV' nat
+
+pureV' :: Nat n -> a -> Vec n a
+pureV' Zero     _ = ZVec
+pureV' (Succ n) a = a :< pureV' n a
+
 applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
 ZVec      `applyV` ZVec      = ZVec
 (f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
@@ -332,31 +185,35 @@ instance (IsNat n, Storable a) => Storable (Vec n a) where
    peek      = peekV . castPtr
    poke      = pokeV . castPtr
 
-{--------------------------------------------------------------------
-    IsNat
---------------------------------------------------------------------}
 
-instance IsNat Z where
-  nat          = Zero
-  pureV _      = ZVec
-  elemsV []    = ZVec
-  elemsV (_:_) = error "elemsV: too many elements"
-  peekV        = const (return ZVec)
-  pokeV        = const (const (return ()))
+infixl 1 <+>
+-- | Concatenation of vectors
+(<+>) :: Vec m a -> Vec n a -> Vec (m :+: n) a
+ZVec     <+> v = v
+(a :< u) <+> v = a :< (u <+> v)
 
-instance IsNat n => IsNat (S n) where
-  nat               = Succ nat
-  pureV a           = a :< pureV a
-  elemsV []         = error "elemsV: too few elements"
-  elemsV (a : as)   = a :< elemsV as
-  peekV p           =  do a  <- peek p
-                          as <- peekV (p `plusPtr` sizeOf a)
-                          return (a :< as)
-                     -- liftA2 (:<) (peek p) (peekV (succPtr p))
-  -- peekV = (liftA2.liftA2) (:<) peek (peekV . succPtr)
-  -- TODO: Try these niftier peekV definitions
-  pokeV p (a :< as) = do poke p a
-                         pokeV (p `plusPtr` sizeOf a) as
+
+peekV :: (IsNat n, Storable a) => Ptr a -> IO (Vec n a)
+peekV = peekV' nat
+
+pokeV :: (IsNat n, Storable a) => Ptr a -> Vec n a -> IO ()
+pokeV = pokeV' nat
+
+peekV' :: Storable a => Nat n -> Ptr a -> IO (Vec n a)
+peekV' Zero _ = return ZVec
+peekV' (Succ n) p =  do a  <- peek p
+                        as <- peekV' n (p `plusPtr` sizeOf a)
+                        return (a :< as)
+
+-- peekV' (Succ n) p = liftA2 (:<) (peek p) (peekV (succPtr p))
+--                   = liftA2 (:<) peek (peekV (succPtr p))
+-- 
+-- peekV' (Succ _) = (liftA2.liftA2) (:<) peek (peekV . succPtr)
+
+pokeV' :: Storable a => Nat n -> Ptr a -> Vec n a -> IO ()
+pokeV' Zero     _ ZVec      = return ()
+pokeV' (Succ n) p (a :< as) = do poke p a
+                                 pokeV' n (p `plusPtr` sizeOf a) as
 
 -- -- Experiment toward simplifying away the plusPtr calls.
 -- succPtr :: forall a. Storable a => Ptr a -> Ptr a
@@ -364,12 +221,6 @@ instance IsNat n => IsNat (S n) where
 
 -- TODO: Optimize peekV, pokeV.  For instance, unroll the loop in the
 -- dictionary, remove the sizeOf dependence on @a@.
-
-infixl 1 <+>
--- | Concatenation of vectors
-(<+>) :: Vec m a -> Vec n a -> Vec (m :+: n) a
-ZVec     <+> v = v
-(a :< u) <+> v = a :< (u <+> v)
 
 -- | Indices under @n@: 'index0' :< 'index1' :< ...
 indices :: Nat n -> Vec n (Index n)
@@ -379,27 +230,8 @@ indices (Succ n) = index0 :< fmap succI (indices n)
 -- TODO: Try reimplementing many Vec functions via foldr.  Warning: some
 -- (most?) will fail because they rely on a polymorphic combining function.
 
--- | @n@ a vector length.
-class {- Typeable n => -} IsNat n where
-  nat    :: Nat n
-  pureV  :: a   -> Vec n a
-  elemsV :: [a] -> Vec n a
-  peekV  :: Storable a => Ptr a -> IO (Vec n a)
-  pokeV  :: Storable a => Ptr a -> Vec n a -> IO ()
-
 -- Convert from vector to list via Data.Foldable.toList
 
-{-
--- TODO: remove all but nat from the class. Define the rest outside of the
--- class by using nat. Then break this module into Nat and Vec. For instance,
-
-pureV :: IsNat n => a -> Vec n a
-pureV = pureN nat
-
-pureN :: Nat n -> a -> Vec n a
-pureN Zero     _ = ZVec
-pureN (Succ n) a = a :< pureN n a
--}
 
 -- Convenient nicknames
 
@@ -575,6 +407,17 @@ deleteV :: Eq a => a -> Vec (S n) a -> Vec n a
 deleteV b (a :< as) | a == b = as
 deleteV _ (_ :< ZVec)        = error "deleteV: did not find element"
 deleteV b (a :< as@(_:<_))   = a :< deleteV b as
+
+
+-- | Convert a list into a vector. Error if the list is too short or too long
+elemsV :: IsNat n => [a] -> Vec n a
+elemsV = elemsV' nat
+
+elemsV' :: Nat n -> [a] -> Vec n a
+elemsV' Zero []           = ZVec
+elemsV' Zero (_:_)        = error "elemsV: too many elements"
+elemsV' (Succ _) []       = error "elemsV: too few elements"
+elemsV' (Succ n) (a : as) = a :< elemsV' n as
 
 
 {--------------------------------------------------------------------
