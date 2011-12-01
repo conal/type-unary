@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
