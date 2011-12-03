@@ -59,8 +59,8 @@ infixr 5 :<
 -- | Vectors with type-determined length, having empty vector ('ZVec') and
 -- vector cons ('(:<)').
 data Vec :: * -> * -> * where
-  ZVec :: Vec Z a                       -- -- ^ zero vector
-  (:<) :: a -> Vec n a -> Vec (S n) a   -- -- ^ vector cons
+  ZVec :: Vec Z a                       -- ^ zero vector
+  (:<) :: a -> Vec n a -> Vec (S n) a   -- ^ vector cons
 
 -- | Type-safe head for vectors
 headV :: Vec (S n) a -> a
@@ -167,6 +167,7 @@ instance Traversable (Vec n) where
   traverse _ ZVec      = pure ZVec
   traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
 
+
 instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
   { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
 
@@ -177,6 +178,10 @@ instance (IsNat n, Num a) => VectorSpace (Vec n a) where
 instance (IsNat n, Num a) => InnerSpace (Vec n a) where
    -- u <.> v = vec1 (sum (liftA2 (*) u v))
    (<.>) = (result.result) (vec1 . sum) (liftA2 (*))
+
+-- TODO: Rethink the previous three instances. Maybe replace the Num
+-- constraints with AdditiveGroup, VectorSpace, and InnerSpace.
+-- And why Vec1 for Scalar?
 
 instance (IsNat n, Storable a) => Storable (Vec n a) where
    sizeOf    = const (fromIntegral (natToZ (nat :: Nat n))
