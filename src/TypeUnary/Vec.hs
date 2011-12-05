@@ -59,7 +59,7 @@ infixr 5 :<
 -- | Vectors with type-determined length, having empty vector ('ZVec') and
 -- vector cons ('(:<)').
 data Vec :: * -> * -> * where
-  ZVec :: Vec Z a                       -- ^ zero vector
+  ZVec :: Vec Z a                       -- ^ empty vector
   (:<) :: a -> Vec n a -> Vec (S n) a   -- ^ vector cons
 
 -- | Type-safe head for vectors
