@@ -36,7 +36,7 @@ import Data.Proof.EQ
 
 import TypeUnary.TyNat
 
--- Natural numbers
+-- Natural numbers in unary form, built from zero & successor
 data Nat :: * -> * where
   Zero :: Nat Z
   Succ :: IsNat n => Nat n -> Nat (S n)
