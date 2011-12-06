@@ -118,6 +118,9 @@ data m :<: n where
 -- | A number under the given limit, with proof
 data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
 
+-- TODO: Consider removing the Nat n field, since it's computable from
+-- IsNat n or n :<: lim.
+
 instance Eq (Index lim) where
   Index _ n == Index _ n' = isJust (n `natEq` n')
 
