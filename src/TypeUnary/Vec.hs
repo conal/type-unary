@@ -300,6 +300,16 @@ un3 (a :< b :< c :< ZVec) = (a,b,c)
 un4 :: Vec4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
+-- TODO: consider this notation:
+--
+--   infixr 5 :<
+--   (<|) :: a -> a -> Vec2 a
+--   (<|) = vec2
+-- 
+-- So we can say things like
+-- 
+--   a :< b <| c
+
 {--------------------------------------------------------------------
     Extract and set elements
 --------------------------------------------------------------------}
