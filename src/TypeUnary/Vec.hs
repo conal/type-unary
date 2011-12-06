@@ -38,6 +38,7 @@ import Prelude hiding (foldr,sum)
 
 -- #include "Typeable.h"
 
+import Data.Monoid (Monoid(..))
 import Control.Applicative (Applicative(..),liftA2,(<$>))
 import Data.Foldable (Foldable(..),toList,sum)
 import Data.Traversable (Traversable(..))
@@ -120,6 +121,11 @@ instance Show a => Show (Vec n a) where
 -- Shady.Language.Type, which conflicted with the Show instance above. To
 -- do: check whether this change broke Shady's code generation. Maybe not,
 -- if the code generation uses Pretty instead of Show.
+
+-- The Monoid instance uses a standard recipe for applicative functors.
+instance (IsNat n, Monoid a) => Monoid (Vec n a) where
+  mempty  = pure mempty
+  mappend = liftA2 mappend
 
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
