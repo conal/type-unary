@@ -29,6 +29,7 @@ module TypeUnary.Vec
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
   , un1, un2, un3, un4
   , get, get0, get1, get2, get3
+  , update
   , set, set0, set1, set2, set3
   , swizzle, split, deleteV, elemsV
   , ToVec(..)
@@ -320,7 +321,7 @@ un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
     Extract and set elements
 --------------------------------------------------------------------}
 
--- | General indexing, taking a proof that the index is within bounds.
+-- | Extract a vector element, taking a proof that the index is within bounds.
 get :: Index n -> Vec n a -> a
 get (Index ZLess     Zero    ) (a :< _)  = a
 get (Index (SLess p) (Succ m)) (_ :< as) = get (Index p m) as
@@ -335,11 +336,14 @@ get1 = get index1
 get2 = get index2
 get3 = get index3
 
+-- | Update a vector element, taking a proof that the index is within bounds.
+update :: Index n -> (a -> a) -> Vec n a -> Vec n a
+update (Index ZLess     Zero    ) f (a :< as) = f a :< as
+update (Index (SLess p) (Succ m)) f (a :< as) =   a :< update (Index p m) f as
 
--- | General indexing, taking a proof that the index is within bounds.
+-- | Replace a vector element, taking a proof that the index is within bounds.
 set :: Index n -> a -> Vec n a -> Vec n a
-set (Index ZLess     Zero    ) a' (_ :< as) = a' :< as
-set (Index (SLess p) (Succ m)) a' (a :< as) = a  :< set (Index p m) a' as
+set i a' = update i (const a')
 
 set0 :: a -> Vec (N1 :+: n) a -> Vec (N1 :+: n) a   -- ^ Set first element
 set1 :: a -> Vec (N2 :+: n) a -> Vec (N2 :+: n) a   -- ^ Set second element
