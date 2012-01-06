@@ -361,20 +361,6 @@ swizzle :: Vec n (Index m) -> Vec m a -> Vec n a
 swizzle ZVec        _ = ZVec
 swizzle (ix :< ixs) v = get ix v :< swizzle ixs v
 
-{-
--- 'a' :< 'b' :< 'c' :< ZVec
-t1 :: Three Char
-t1 = elemsV "abc"
-     -- 'a' :< 'b' :< 'c' :< ZVec
-
-t2 :: Four (Index N3)
-t2 = elemsV [index2, index0 ,index1, index2]
-
--- 'c' :< 'a' :< 'b' :< 'c' :< ZVec
-t3 :: Four Char
-t3 = swizzle t2 t1
--}
-
 -- | Split a vector
 split :: IsNat n => Vec (n :+: m) a -> (Vec n a, Vec m a)
 split = split' nat
@@ -443,6 +429,20 @@ elemsV' Zero []           = ZVec
 elemsV' Zero (_:_)        = error "elemsV: too many elements"
 elemsV' (Succ _) []       = error "elemsV: too few elements"
 elemsV' (Succ n) (a : as) = a :< elemsV' n as
+
+{-
+-- 'a' :< 'b' :< 'c' :< ZVec
+t1 :: Three Char
+t1 = elemsV "abc"
+     -- 'a' :< 'b' :< 'c' :< ZVec
+
+t2 :: Four (Index N3)
+t2 = elemsV [index2, index0 ,index1, index2]
+
+-- 'c' :< 'a' :< 'b' :< 'c' :< ZVec
+t3 :: Four Char
+t3 = swizzle t2 t1
+-}
 
 
 {--------------------------------------------------------------------
