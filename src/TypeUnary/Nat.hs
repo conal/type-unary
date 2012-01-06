@@ -110,13 +110,13 @@ data m :<: n where
   ZLess :: Z :<: S n
   SLess :: m :<: n -> S m :<: S n
 
--- data Index :: * -> * where
---   Index :: (n :<: lim) -> Nat n -> Index lim
-
--- or
-
 -- | A number under the given limit, with proof
 data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
+
+-- Equivalently,
+-- 
+--   data Index :: * -> * where
+--     Index :: (n :<: lim) -> Nat n -> Index lim
 
 -- TODO: Consider removing the Nat n field, since it's computable from
 -- IsNat n or n :<: lim.
