@@ -31,6 +31,7 @@ module TypeUnary.Vec
   , get, get0, get1, get2, get3
   , update
   , set, set0, set1, set2, set3
+  , getI, setI
   , swizzle, split, deleteV, elemsV
   , ToVec(..)
   ) where
@@ -354,6 +355,16 @@ set0 = set index0
 set1 = set index1
 set2 = set index2
 set3 = set index3
+
+-- | Variant of 'get' in which the index size is checked at run-time
+-- instead of compile-time.
+getI :: (IsNat n, Integral i) => i -> Vec n a -> a
+getI = get . coerceToIndex
+
+-- | Variant of 'set' in which the index size is checked at run-time
+-- instead of compile-time.
+setI :: (IsNat n, Integral i) => i -> a -> Vec n a -> Vec n a
+setI = set . coerceToIndex
 
 
 -- | Swizzling.  Extract multiple elements simultaneously.

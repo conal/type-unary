@@ -23,6 +23,7 @@ module TypeUnary.Nat
   , IsNat(..)
   -- * Inequality proofs and indices
   , (:<:)(..), Index(..), succI, index0, index1, index2, index3
+  , coerceToIndex
   ) where
 
 import Prelude hiding (foldr,sum)
@@ -138,6 +139,21 @@ index2 = succI index1
 
 index3 :: Index (N4 :+: m)
 index3 = succI index2
+
+-- | Index generation from integer. Can fail dynamically if the integer is
+-- too large.
+coerceToIndex :: (Integral i, IsNat m) => i -> Index m
+coerceToIndex = coerceToIndex' nat
+
+coerceToIndex' :: Integral i => Nat m -> i -> Index m
+coerceToIndex' mOrig niOrig = loop mOrig niOrig
+ where
+   loop :: Integral i => Nat m -> i -> Index m
+   loop Zero _        = error $ "coerceToIndex: out of bounds: "
+                                ++ show niOrig ++ " should be less than "
+                                ++ show mOrig
+   loop (Succ _)   0  = Index ZLess Zero
+   loop (Succ m') ni' = succI (loop m' (ni'-1))
 
 {--------------------------------------------------------------------
     IsNat
