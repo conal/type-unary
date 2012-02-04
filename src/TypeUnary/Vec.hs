@@ -358,12 +358,12 @@ set3 = set index3
 
 -- | Variant of 'get' in which the index size is checked at run-time
 -- instead of compile-time.
-getI :: (IsNat n, Integral i) => i -> Vec n a -> a
+getI :: (IsNat n, Show i, Integral i) => i -> Vec n a -> a
 getI = get . coerceToIndex
 
 -- | Variant of 'set' in which the index size is checked at run-time
 -- instead of compile-time.
-setI :: (IsNat n, Integral i) => i -> a -> Vec n a -> Vec n a
+setI :: (IsNat n, Show i, Integral i) => i -> a -> Vec n a -> Vec n a
 setI = set . coerceToIndex
 
 
