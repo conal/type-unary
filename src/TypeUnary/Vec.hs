@@ -32,9 +32,11 @@ module TypeUnary.Vec
   , update
   , set, set0, set1, set2, set3
   , getI, setI
-  , swizzle, split, deleteV, elemsV
+  , flattenV, swizzle, split, deleteV, elemsV, unzipV
   , ToVec(..)
   ) where
+
+  -- TODO: Consider dropping "V" suffix from several of the names.
 
 import Prelude hiding (foldr,sum)
 
@@ -366,6 +368,18 @@ getI = get . coerceToIndex
 setI :: (IsNat n, Show i, Integral i) => i -> a -> Vec n a -> Vec n a
 setI = set . coerceToIndex
 
+{--------------------------------------------------------------------
+    Misc
+--------------------------------------------------------------------}
+
+-- | Flatten a vector of vectors (a 2D array) into a vector
+flattenV :: IsNat n => Vec n (Vec m a) -> Vec (n :*: m) a
+flattenV = flattenV' nat
+
+flattenV' :: Nat n -> Vec n (Vec m a) -> Vec (n :*: m) a
+flattenV' Zero _               = ZVec
+flattenV' (Succ n') (v :< vs') = v <+> flattenV' n' vs'
+flattenV' _ _ = error "flattenV': GHC doesn't know this case can't happen."
 
 -- | Swizzling.  Extract multiple elements simultaneously.
 swizzle :: Vec n (Index m) -> Vec m a -> Vec n a
@@ -455,6 +469,10 @@ t3 :: Four Char
 t3 = swizzle t2 t1
 -}
 
+-- | Unzip a list of pairs into a pair of lists
+unzipV :: Vec n (a,b) -> (Vec n a, Vec n b)
+unzipV ZVec = (ZVec,ZVec)
+unzipV ((a,b) :< ps) = (a :< as, b :< bs) where (as,bs) = unzipV ps
 
 {--------------------------------------------------------------------
     Conversion to vectors
