@@ -4,7 +4,7 @@
 ----------------------------------------------------------------------
 -- |
 -- Module      :  TypeUnary.Nat
--- Copyright   :  (c) Conal Elliott 2009
+-- Copyright   :  (c) Conal Elliott 2009-2012
 -- License     :  BSD3
 -- 
 -- Maintainer  :  conal@conal.net
@@ -19,7 +19,7 @@ module TypeUnary.Nat
   -- * Value-typed natural numbers
   , Nat(..), zero, one, two, three, four
   , withIsNat, natSucc, natIsNat
-  , natToZ, natEq, natAdd
+  , natToZ, natEq, natAdd, natMul
   , IsNat(..)
   -- * Inequality proofs and indices
   , (:<:)(..), Index(..), succI, index0, index1, index2, index3
@@ -42,7 +42,8 @@ data Nat :: * -> * where
   Zero :: Nat Z
   Succ :: IsNat n => Nat n -> Nat (S n)
 
-instance Show (Nat n) where show = show . natToZ
+instance Show (Nat n) where
+  show n = show (natToZ n :: Integer)
 
 withIsNat :: (IsNat n => Nat n -> a) -> (Nat n -> a)
 withIsNat p Zero     = p Zero
@@ -72,8 +73,8 @@ withIsNat' p n = case natIsNat' n of
                    NatIsNat n' Refl -> p n'
 -}
 
--- | Interpret a 'Nat' as an 'Integer'
-natToZ :: Nat n -> Integer
+-- | Interpret a 'Nat' as a plain number
+natToZ :: (Enum a, Num a) => Nat n -> a
 natToZ Zero     = 0
 natToZ (Succ n) = (succ . natToZ) n
 
@@ -87,6 +88,11 @@ _      `natEq` _      = Nothing
 natAdd :: Nat m -> Nat n -> Nat (m :+: n)
 Zero   `natAdd` n = n
 Succ m `natAdd` n = natSucc (m `natAdd` n)
+
+-- | Product of naturals
+natMul :: forall m n. Nat m -> Nat n -> Nat (m :*: n)
+Zero   `natMul` _ = Zero
+Succ m `natMul` n = n `natAdd` (m `natMul` n)
 
 zero :: Nat N0
 zero = Zero
@@ -103,6 +109,9 @@ three = Succ two
 four :: Nat N4
 four = Succ three
 
+-- TODO: Consider whether we really want definitions like natAdd, natMul,
+-- and zero, ..., four, considering that all of them can be synthesized
+-- from IsNat.
 
 infix 4 :<:
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies, TypeOperators, EmptyDataDecls #-}
+{-# LANGUAGE UndecidableInstances #-} -- for :*:
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -15,7 +16,7 @@
 module TypeUnary.TyNat
   (
     -- * Type-level natural numbers
-    Z, S, (:+:)
+    Z, S, (:+:), (:*:)
   , N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16
   ) where
 
@@ -35,6 +36,15 @@ type family a :+: b
 
 type instance Z   :+: b = b
 type instance S a :+: b = S (a :+: b)
+
+infixl 7 :*:
+
+-- | Product of type-level numbers
+type family a :*: b
+
+type instance Z   :*: b = Z
+type instance S a :*: b = b :+: (a :*: b)
+
 
 -- Generated code
 -- 
@@ -57,3 +67,4 @@ type N13 = S N12
 type N14 = S N13
 type N15 = S N14
 type N16 = S N15
+

@@ -194,7 +194,7 @@ instance (IsNat n, Num a) => InnerSpace (Vec n a) where
 -- And why Vec1 for Scalar?
 
 instance (IsNat n, Storable a) => Storable (Vec n a) where
-   sizeOf    = const (fromIntegral (natToZ (nat :: Nat n))
+   sizeOf    = const ((natToZ (nat :: Nat n))
                       * sizeOf (undefined :: a))
    alignment = const (alignment (undefined :: a))
    peek      = peekV . castPtr

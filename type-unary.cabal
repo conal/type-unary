@@ -1,5 +1,5 @@
 Name:                type-unary
-Version:             0.1.16
+Version:             0.1.18
 Cabal-Version:       >= 1.2
 Synopsis:            
   Type-level and typed unary natural numbers, inequality proofs, vectors
@@ -11,7 +11,7 @@ Description:
 Author:              Conal Elliott
 Maintainer:          conal@conal.net
 Homepage:            https://github.com/conal/type-unary
-Copyright:           (c) 2009-2011 by Conal Elliott
+Copyright:           (c) 2009-2012 by Conal Elliott
 License:             BSD3
 License-File:        COPYING
 Stability:           experimental
