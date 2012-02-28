@@ -238,9 +238,13 @@ pokeV' (Succ n) p (a :< as) = do poke p a
 -- dictionary, remove the sizeOf dependence on @a@.
 
 -- | Indices under @n@: 'index0' :< 'index1' :< ...
-indices :: Nat n -> Vec n (Index n)
-indices Zero     = ZVec
-indices (Succ n) = index0 :< fmap succI (indices n)
+indices :: IsNat n => Vec n (Index n)
+indices = indices' nat
+
+-- Variant of 'indices' with explicit argument.
+indices' :: Nat n -> Vec n (Index n)
+indices' Zero     = ZVec
+indices' (Succ n) = index0 :< fmap succI (indices' n)
 
 -- TODO: Try reimplementing many Vec functions via foldr.  Warning: some
 -- (most?) will fail because they rely on a polymorphic combining function.
