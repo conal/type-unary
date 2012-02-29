@@ -23,7 +23,7 @@ module TypeUnary.Vec
   (
     module TypeUnary.Nat
   -- * Vectors
-  , Vec(..), headV, tailV, joinV, (<+>), indices
+  , Vec(..), headV, tailV, joinV, (<+>), indices, iota
   , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
@@ -250,6 +250,10 @@ indices' (Succ n) = index0 :< fmap succI (indices' n)
 -- (most?) will fail because they rely on a polymorphic combining function.
 
 -- Convert from vector to list via Data.Foldable.toList
+
+-- | Vector of ints from 0 to n-1. Named for APL iota operation (but 0 based).
+iota :: (IsNat n, Num a, Enum a) => Vec n a
+iota = unIndex <$> indices
 
 
 -- Convenient nicknames

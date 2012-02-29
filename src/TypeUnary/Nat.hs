@@ -22,7 +22,7 @@ module TypeUnary.Nat
   , natToZ, natEq, natAdd, natMul
   , IsNat(..)
   -- * Inequality proofs and indices
-  , (:<:)(..), Index(..), succI, index0, index1, index2, index3
+  , (:<:)(..), Index(..), unIndex, succI, index0, index1, index2, index3
   , coerceToIndex
   ) where
 
@@ -130,6 +130,9 @@ data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
 
 -- TODO: Consider removing the Nat n field, since it's computable from
 -- IsNat n or n :<: lim.
+
+unIndex :: (Num a, Enum a) => Index m -> a
+unIndex (Index _ j) = natToZ j
 
 instance Eq (Index lim) where
   Index _ n == Index _ n' = isJust (n `natEq` n')
