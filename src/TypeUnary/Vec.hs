@@ -38,13 +38,13 @@ module TypeUnary.Vec
 
   -- TODO: Consider dropping "V" suffix from several of the names.
 
-import Prelude hiding (foldr,sum)
+import Prelude hiding (foldr,sum,and)
 
 -- #include "Typeable.h"
 
 import Data.Monoid (Monoid(..))
 import Control.Applicative (Applicative(..),liftA2,(<$>))
-import Data.Foldable (Foldable(..),toList,sum)
+import Data.Foldable (Foldable(..),toList,sum,and)
 import Data.Traversable (Traversable(..))
 -- import Data.Typeable
 
@@ -122,6 +122,16 @@ instance Ord a => Ord (Vec n a) where
 --       LT -> LT
 --       GT -> GT
 --       EQ -> as `compare` bs
+
+-- Some alternatives:
+-- 
+--   (==*) :: (IsNat n, Eq a) => Vec n a -> Vec n a -> Bool
+--   (==*) = (fmap.fmap) and (liftA2 (==))
+--   
+--   -- as ==* bs = and (liftA2 (==) as bs)
+--   
+--   compare' :: (IsNat n, Ord a) => Vec n a -> Vec n a -> Ordering
+--   compare' = (fmap.fmap) fold (liftA2 compare)
 
 
 instance Show a => Show (Vec n a) where
