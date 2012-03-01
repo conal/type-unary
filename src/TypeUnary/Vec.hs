@@ -113,10 +113,16 @@ instance Eq a => Eq (Vec n a) where
 instance Ord a => Ord (Vec n a) where
   ZVec      `compare` ZVec      = EQ
   (a :< as) `compare` (b :< bs) =
-    case a `compare` b of
-      LT -> LT
-      GT -> GT
-      EQ -> as `compare` bs
+    (a `compare` b) `mappend` (as `compare` bs)
+
+-- Equivalently,
+-- 
+--   (a :< as) `compare` (b :< bs) =
+--     case a `compare` b of
+--       LT -> LT
+--       GT -> GT
+--       EQ -> as `compare` bs
+
 
 instance Show a => Show (Vec n a) where
   show v = "elemsV " ++ show (toList v)
