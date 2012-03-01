@@ -44,7 +44,7 @@ import Prelude hiding (foldr,sum,and)
 
 import Data.Monoid (Monoid(..))
 import Control.Applicative (Applicative(..),liftA2,(<$>))
-import Data.Foldable (Foldable(..),toList,sum,and)
+import Data.Foldable (Foldable(..),toList,sum) -- ,and
 import Data.Traversable (Traversable(..))
 -- import Data.Typeable
 
