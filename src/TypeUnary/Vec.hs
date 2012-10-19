@@ -32,7 +32,9 @@ module TypeUnary.Vec
   , update
   , set, set0, set1, set2, set3
   , getI, setI
-  , flattenV, swizzle, split, deleteV, elemsV, unzipV
+  , flattenV, swizzle, split, deleteV, elemsV
+  , zipV , zipWithV , unzipV
+  , zipV3, zipWithV3, unzipV3
   , ToVec(..)
   ) where
 
@@ -336,7 +338,7 @@ un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 
 -- TODO: consider this notation:
 --
---   infixr 5 :<
+--   infixr 5 <|
 --   (<|) :: a -> a -> Vec2 a
 --   (<|) = vec2
 -- 
@@ -407,8 +409,12 @@ flattenV' _ _ = error "flattenV': GHC doesn't know this case can't happen."
 
 -- | Swizzling.  Extract multiple elements simultaneously.
 swizzle :: Vec n (Index m) -> Vec m a -> Vec n a
-swizzle ZVec        _ = ZVec
-swizzle (ix :< ixs) v = get ix v :< swizzle ixs v
+swizzle is v = flip get v <$> is
+
+-- swizzle ZVec        _ = ZVec
+-- swizzle (ix :< ixs) v = get ix v :< swizzle ixs v
+
+-- swizzle = flip (fmap . flip get)
 
 -- | Split a vector
 split :: IsNat n => Vec (n :+: m) a -> (Vec n a, Vec m a)
@@ -440,6 +446,42 @@ split' (Succ n) (a :< as) = (a :< bs, cs)
 --                TypeUnary.Vec.take :: IsNat n => Vec (n :+: m) a -> Vec n a
 --     at /Users/conal/Haskell/type-unary/src/TypeUnary/Vec.hs:488:1-18
 --   NB: `:+:' is a type function, and may not be injective
+
+
+-- Alternatively:
+
+{-
+take :: forall m n a. (IsNat n, IsNat m) => Vec (n :+: m) a -> Vec n a
+take = take' (nat :: Nat n) (nat :: Nat m)
+
+take' :: Nat n -> Nat m -> Vec (n :+: m) a -> Vec n a
+take' Zero _ _             = ZVec
+take' (Succ n) m (a :< as) = a :< take' n m as
+-}
+
+-- I think it'd be hard to use take. I guess we'd have to subtract in the type
+-- system.
+
+{-
+
+take :: forall m n a. (IsNat n, IsNat m) =>
+        Vec (n :+: m) a -> (Vec n a,Nat m)
+take = take' (nat :: Nat n)
+
+take' :: Nat n -> Vec (n :+: m) a -> (Vec n a,Nat m)
+take' Zero as             = (ZVec,lengthV as)
+take' (Succ n) (a :< as) = (a :< as', m)
+ where
+   (as',m) = take' n as
+
+lengthV :: Vec n a -> Nat n
+lengthV ZVec      = Zero
+lengthV (a :< as) = Succ (lengthV as)
+
+--     Could not deduce (IsNat n1) arising from a use of `Succ'
+--     from the context (n ~ S n1)
+
+-}
 
 {-
 
@@ -493,10 +535,39 @@ t3 :: Four Char
 t3 = swizzle t2 t1
 -}
 
--- | Unzip a list of pairs into a pair of lists
+-- | Zip two vectors into one. Like @'liftA2' '(,)'@, but the former requires
+-- @IsNat n@.
+zipV :: Vec n a -> Vec n b -> Vec n (a,b)
+zipV = zipWithV (,)
+
+-- | Zip three vectors into one. Like @'liftA3' '(,)'@, but the former requires
+-- @IsNat n@.
+zipV3 :: Vec n a -> Vec n b -> Vec n c -> Vec n (a,b,c)
+zipV3 = zipWithV3 (,,)
+
+-- | Unzip one vector into two. Like 'liftA2', but the former requires
+-- @IsNat n@.
+zipWithV :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+zipWithV _ ZVec      ZVec      = ZVec
+zipWithV f (a :< as) (b :< bs) = f a b :< zipWithV f as bs
+
+-- | Unzip one vector into two. Like 'liftA2', but the former requires
+-- @IsNat n@.
+zipWithV3 :: (a -> b -> c -> d) -> Vec n a -> Vec n b -> Vec n c -> Vec n d
+zipWithV3 _ ZVec      ZVec      ZVec      = ZVec
+zipWithV3 f (a :< as) (b :< bs) (c :< cs) = f a b c :< zipWithV3 f as bs cs
+
+-- | Unzip a vector of pairs into a pair of vectors
 unzipV :: Vec n (a,b) -> (Vec n a, Vec n b)
 unzipV ZVec = (ZVec,ZVec)
 unzipV ((a,b) :< ps) = (a :< as, b :< bs) where (as,bs) = unzipV ps
+
+-- | Unzip a vector of pairs into a pair of vectors
+unzipV3 :: Vec n (a,b,c) -> (Vec n a, Vec n b, Vec n c)
+unzipV3 ZVec = (ZVec,ZVec,ZVec)
+unzipV3 ((a,b,c) :< ps) = (a :< as, b :< bs, c :< cs) 
+  where (as,bs,cs) = unzipV3 ps
+
 
 {--------------------------------------------------------------------
     Conversion to vectors
