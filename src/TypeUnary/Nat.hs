@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -21,8 +22,10 @@ module TypeUnary.Nat
   , withIsNat, natSucc, natIsNat
   , natToZ, natEq, natAdd, natMul
   , IsNat(..)
+  , induction
   -- * Inequality proofs and indices
-  , (:<:)(..), Index(..), unIndex, succI, index0, index1, index2, index3
+  , (:<:)(..), succLim
+  , Index(..), unIndex, succI, index0, index1, index2, index3
   , coerceToIndex
   ) where
 
@@ -113,12 +116,100 @@ four = Succ three
 -- and zero, ..., four, considering that all of them can be synthesized
 -- from IsNat.
 
+-- | Peano's induction principle
+induction :: forall p. 
+             p Z -> (forall n. IsNat n => p n -> p (S n))
+          -> (forall n. IsNat n => p n)
+induction z s = go nat
+ where
+   -- morphism over z & s.
+   go :: forall n. Nat n -> p n
+   go Zero     = z
+   go (Succ m) = s (go m)
+
+-- TODO: Use induction for n + Z == n. Then associativity and commutativity.
+
+{--------------------------------------------------------------------
+    Inequality proofs
+--------------------------------------------------------------------}
+
 infix 4 :<:
 
 -- | Proof that @m < n@
 data m :<: n where
   ZLess :: Z :<: S n
   SLess :: m :<: n -> S m :<: S n
+
+-- | Increase the upper limit in an inequality proof
+succLim :: m :<: n -> m :<: S n
+succLim ZLess     = ZLess
+succLim (SLess p) = SLess (succLim p)
+
+-- Note: succLim is a morphism
+
+-- addLim :: forall p m n. IsNat p => 
+--           m :<: n -> m :<: (p :+: n)
+-- addLim = addLim' nat
+
+-- addLim' :: Nat p -> m :<: n -> m :<: (p :+: n)
+-- addLim' Zero mn = mn
+-- addLim' (Succ p') mn = bump p' (addLim' p' mn)
+
+
+-- addLim mn = case (nat :: Nat p) of
+--               Zero    -> mn
+--           --  Succ p' -> bump p' (addLim mn)
+--               -- Succ (p' :: Nat p') -> bump p' (addLim mn :: (m :<: p' :+: n))
+--               Succ (p' :: Nat p') -> undefined p' (addLim mn :: (m :<: p' :+: n))
+
+-- p :: S p'
+
+-- S p' + n = S (p' + n)
+
+--               Succ (p' :: Nat p') -> succLim (addLim mn :: (m :<: p' :+: n))
+
+-- bump :: Nat p
+--      -> (m :<:   (p :+: n))
+--      -> (m :<: S (p :+: n))
+-- bump = undefined
+
+-- addLim = case (nat :: Nat p) of
+--               Zero -> id
+--               Succ p' -> succLim . addLim
+
+-- p :: S p'
+-- p = Succ p'
+
+-- p + n == S (p' + n)
+
+-- mn :: m < n
+-- addLim mn :: m < p' + n
+-- succLim (addLim mn) :: m < S (p' + n)
+
+
+-- mn :: S m :<: S n
+-- mn = SLess mn'
+-- mn' :: m :<: n
+
+
+
+
+-- Z + n == n
+
+-- S p' + n == S (p' + n)
+
+-- mn :: S m < S n
+-- mn' :: m < n
+
+-- p :: S p'
+-- p' :: p'
+
+-- ... :: S m :<: (S p' :+: n)
+-- ... :: S m :<: S (p' :+: S n)
+
+-- addLim' :: forall p m n. IsNat p => 
+--            Nat p -> m :<: n -> m :<: (p :+: n)
+-- addLim' Zero = id
 
 -- | A number under the given limit, with proof
 data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
@@ -154,18 +245,36 @@ index3 = succI index2
 
 -- | Index generation from integer. Can fail dynamically if the integer is
 -- too large.
-coerceToIndex :: (Show i, Integral i, IsNat m) => i -> Index m
+coerceToIndex :: (Show i, Num i, IsNat m) => i -> Index m
 coerceToIndex = coerceToIndex' nat
 
-coerceToIndex' :: (Show i, Integral i) => Nat m -> i -> Index m
+coerceToIndex' :: (Show i, Num i) => Nat m -> i -> Index m
 coerceToIndex' mOrig niOrig = loop mOrig niOrig
  where
-   loop :: (Show i, Integral i) => Nat m -> i -> Index m
+   loop :: (Show i, Num i) => Nat m -> i -> Index m
    loop Zero _        = error $ "coerceToIndex: out of bounds: "
                                 ++ show niOrig ++ " should be less than "
                                 ++ show mOrig
    loop (Succ _)   0  = Index ZLess Zero
    loop (Succ m') ni' = succI (loop m' (ni'-1))
+
+-- Experimental instances:
+
+instance Show (Index n) where
+  show (Index _ n) = show n
+
+instance IsNat n => Num (Index n) where
+  fromInteger = coerceToIndex
+  (+)    = noIndex "(+)"
+  (*)    = noIndex "(*)"
+  abs    = noIndex "abs"
+  signum = noIndex "signum"
+
+noIndex :: String -> a
+noIndex meth = error (meth ++ ": no method for Index n. Sorry.")
+
+-- TODO: Perhaps replace these noIndex uses with real definitions. However, it
+-- doesn't seem likely that we'd want to stay in Index n for the same n.
 
 {--------------------------------------------------------------------
     IsNat
