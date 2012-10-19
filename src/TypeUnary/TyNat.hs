@@ -16,7 +16,7 @@
 module TypeUnary.TyNat
   (
     -- * Type-level natural numbers
-    Z, S, (:+:), (:*:)
+    Z, S, (:+:), (:*:), (:-:)
   , N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16
   ) where
 
@@ -45,6 +45,13 @@ type family a :*: b
 type instance Z   :*: b = Z
 type instance S a :*: b = b :+: (a :*: b)
 
+infixl 6 :-:
+
+-- Experiment:
+type family a :-: b
+
+type instance   n :-:   Z = n
+type instance S n :-: S m = n :-: m
 
 -- Generated code
 -- 
