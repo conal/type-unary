@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilies, EmptyDataDecls, TypeOperators
-           , GADTs, KindSignatures
+           , GADTs, KindSignatures, TupleSections
            , FlexibleInstances, FlexibleContexts
            , UndecidableInstances
            , ScopedTypeVariables, CPP
@@ -35,6 +35,7 @@ module TypeUnary.Vec
   , flattenV, swizzle, split, deleteV, elemsV
   , zipV , zipWithV , unzipV
   , zipV3, zipWithV3, unzipV3
+  , cross
   , ToVec(..)
   ) where
 
@@ -568,6 +569,10 @@ unzipV3 ZVec = (ZVec,ZVec,ZVec)
 unzipV3 ((a,b,c) :< ps) = (a :< as, b :< bs, c :< cs) 
   where (as,bs,cs) = unzipV3 ps
 
+-- | Cross-product of two vectors, in the set-theory sense, not the geometric
+-- sense. You can 'flattenV' the resulting vector of vectors.
+cross :: Vec m a -> Vec n b -> Vec m (Vec n (a,b))
+cross as bs = (\ a -> (a,) <$> bs) <$> as
 
 {--------------------------------------------------------------------
     Conversion to vectors
