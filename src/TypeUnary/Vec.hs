@@ -35,7 +35,7 @@ module TypeUnary.Vec
   , flattenV, swizzle, split, deleteV, elemsV
   , zipV , zipWithV , unzipV
   , zipV3, zipWithV3, unzipV3
-  , cross
+  , transpose, cross
   , ToVec(..)
   ) where
 
@@ -574,6 +574,10 @@ unzipV3 ((a,b,c) :< ps) = (a :< as, b :< bs, c :< cs)
 cross :: Vec m a -> Vec n b -> Vec m (Vec n (a,b))
 cross as bs = (\ a -> (a,) <$> bs) <$> as
 
+-- | Matrix transposition. Specialization of 'sequenceA'.
+transpose :: IsNat n => Vec m (Vec n a) -> Vec n (Vec m a)
+transpose = sequenceA
+
 {--------------------------------------------------------------------
     Conversion to vectors
 --------------------------------------------------------------------}
@@ -597,3 +601,15 @@ toVecL _ _ = error "toVecL: length mismatch"
 
 result :: (b -> b') -> ((a -> b) -> (a -> b'))
 result = (.)
+
+{--------------------------------------------------------------------
+    Numeric instances via the applicative-numbers package
+--------------------------------------------------------------------}
+
+-- Generate bogus (error-producing) Enum
+#define INSTANCE_Enum
+
+#define CONSTRAINTS IsNat n, 
+
+#define APPLICATIVE Vec n
+#include "ApplicativeNumeric-inc.hs"
