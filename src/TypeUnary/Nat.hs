@@ -245,13 +245,13 @@ index3 = succI index2
 
 -- | Index generation from integer. Can fail dynamically if the integer is
 -- too large.
-coerceToIndex :: (Show i, Num i, IsNat m) => i -> Index m
+coerceToIndex :: (Eq i, Show i, Num i, IsNat m) => i -> Index m
 coerceToIndex = coerceToIndex' nat
 
-coerceToIndex' :: (Show i, Num i) => Nat m -> i -> Index m
+coerceToIndex' :: (Eq i, Show i, Num i) => Nat m -> i -> Index m
 coerceToIndex' mOrig niOrig = loop mOrig niOrig
  where
-   loop :: (Show i, Num i) => Nat m -> i -> Index m
+   loop :: (Eq i, Show i, Num i) => Nat m -> i -> Index m
    loop Zero _        = error $ "coerceToIndex: out of bounds: "
                                 ++ show niOrig ++ " should be less than "
                                 ++ show mOrig
