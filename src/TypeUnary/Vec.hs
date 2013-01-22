@@ -6,7 +6,8 @@
            , RankNTypes
            , MultiParamTypeClasses, FunctionalDependencies
   #-}
-{-# OPTIONS_GHC -Wall -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -Wall #-}
+
 ----------------------------------------------------------------------
 -- |
 -- Module      :  TypeUnary.Vec
@@ -32,7 +33,7 @@ module TypeUnary.Vec
   , update
   , set, set0, set1, set2, set3
   , getI, setI
-  , flattenV, swizzle, split, deleteV, elemsV
+  , flattenV, chunkV, swizzle, split, deleteV, elemsV
   , zipV , zipWithV , unzipV
   , zipV3, zipWithV3, unzipV3
   , transpose, cross
@@ -109,6 +110,12 @@ vElems = foldr (:) []
 
 -}
 
+cant :: String -> a
+cant str = error $ str ++ ": GHC doesn't know this case can't happen."
+
+cantV :: String -> a
+cantV str = cant (str ++ " on Vec")
+
 {--------------------------------------------------------------------
     Instances for standard classes
 --------------------------------------------------------------------}
@@ -116,11 +123,13 @@ vElems = foldr (:) []
 instance Eq a => Eq (Vec n a) where
   ZVec    == ZVec    = True
   a :< as == b :< bs = a==b && as==bs
+  _ == _ = cantV "(==)"
 
 instance Ord a => Ord (Vec n a) where
   ZVec      `compare` ZVec      = EQ
   (a :< as) `compare` (b :< bs) =
     (a `compare` b) `mappend` (as `compare` bs)
+  _ `compare` _ = cantV "compare"
 
 -- Equivalently,
 -- 
@@ -172,6 +181,7 @@ pureV' (Succ n) a = a :< pureV' n a
 applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
 ZVec      `applyV` ZVec      = ZVec
 (f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
+_ `applyV` _ = cant "applyV"
 
 -- Without -fno-warn-incomplete-patterns above,
 -- the previous two instances lead to warnings about non-exhaustive
@@ -191,6 +201,7 @@ instance IsNat n => Monad (Vec n) where
 joinV :: Vec n (Vec n a) -> Vec n a
 joinV ZVec = ZVec
 joinV ((a :< _) :< vs) = a :< joinV (tailV <$> vs)
+joinV _ = cant "joinV"
 
 instance Foldable (Vec n) where
   foldr _  b ZVec     = b
@@ -207,6 +218,7 @@ instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
 instance (IsNat n, Num a) => VectorSpace (Vec n a) where
   type Scalar (Vec n a) = Vec1 a
   (*^) (s :< ZVec) = fmap (s *)
+  (*^) _ = cantV "(*^)"
 
 instance (IsNat n, Num a) => InnerSpace (Vec n a) where
    -- u <.> v = vec1 (sum (liftA2 (*) u v))
@@ -252,6 +264,7 @@ pokeV' :: Storable a => Nat n -> Ptr a -> Vec n a -> IO ()
 pokeV' Zero     _ ZVec      = return ()
 pokeV' (Succ n) p (a :< as) = do poke p a
                                  pokeV' n (p `plusPtr` sizeOf a) as
+pokeV' _ _ _ = cant "pokeV"
 
 -- -- Experiment toward simplifying away the plusPtr calls.
 -- succPtr :: forall a. Storable a => Ptr a -> Ptr a
@@ -328,18 +341,22 @@ vec8 a b c d e f g h = a :< vec7 b c d e f g h
 -- | Extract element
 un1 :: Vec1 a -> a
 un1 (a :< ZVec) = a
+un1 _ = cant "un1"
 
 -- | Extract elements
 un2 :: Vec2 a -> (a,a)
 un2 (a :< b :< ZVec) = (a,b)
+un2 _ = cant "un2"
 
 -- | Extract elements
 un3 :: Vec3 a -> (a,a,a)
 un3 (a :< b :< c :< ZVec) = (a,b,c)
+un3 _ = cant "un3"
 
 -- | Extract elements
 un4 :: Vec4 a -> (a,a,a,a)
 un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
+un4 _ = cant "un4"
 
 -- TODO: consider this notation:
 --
@@ -359,6 +376,7 @@ un4 (a :< b :< c :< d :< ZVec) = (a,b,c,d)
 get :: Index n -> Vec n a -> a
 get (Index ZLess     Zero    ) (a :< _)  = a
 get (Index (SLess p) (Succ m)) (_ :< as) = get (Index p m) as
+get _ _ = cant "get"
 
 get0 :: Vec (N1 :+: n) a -> a   -- ^ Get first  element
 get1 :: Vec (N2 :+: n) a -> a   -- ^ Get second element
@@ -374,6 +392,7 @@ get3 = get index3
 update :: Index n -> (a -> a) -> Vec n a -> Vec n a
 update (Index ZLess     Zero    ) f (a :< as) = f a :< as
 update (Index (SLess p) (Succ m)) f (a :< as) =   a :< update (Index p m) f as
+update _ _ _ = cantV "update"
 
 -- | Replace a vector element, taking a proof that the index is within bounds.
 set :: Index n -> a -> Vec n a -> Vec n a
@@ -412,6 +431,15 @@ flattenV' Zero _               = ZVec
 flattenV' (Succ n') (v :< vs') = v <+> flattenV' n' vs'
 flattenV' _ _ = error "flattenV': GHC doesn't know this case can't happen."
 
+-- | Chunk a vector into a vector of vectors (a 2D array)
+chunkV :: (IsNat n, IsNat m) => Vec (n :*: m) a -> Vec n (Vec m a)
+chunkV = chunkV' nat
+
+chunkV' :: IsNat m => Nat n -> Vec (n :*: m) a -> Vec n (Vec m a)
+chunkV' Zero     ZVec = ZVec
+chunkV' (Succ n) as   = v :< chunkV' n as' where (v,as') = split as
+chunkV' _ _ = cant "chunkV"
+
 -- | Swizzling.  Extract multiple elements simultaneously.
 swizzle :: Vec n (Index m) -> Vec m a -> Vec n a
 swizzle is v = flip get v <$> is
@@ -430,6 +458,7 @@ split' Zero v             = (ZVec, v)
 split' (Succ n) (a :< as) = (a :< bs, cs)
  where
    (bs,cs) = split' n as
+split' _ _ = cantV "split"
 
 -- For instance,
 -- 
@@ -555,12 +584,14 @@ zipV3 = zipWithV3 (,,)
 zipWithV :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 zipWithV _ ZVec      ZVec      = ZVec
 zipWithV f (a :< as) (b :< bs) = f a b :< zipWithV f as bs
+zipWithV _ _ _ = cant "zipWithV"
 
 -- | Unzip one vector into two. Like 'liftA2', but the former requires
 -- @IsNat n@.
 zipWithV3 :: (a -> b -> c -> d) -> Vec n a -> Vec n b -> Vec n c -> Vec n d
 zipWithV3 _ ZVec      ZVec      ZVec      = ZVec
 zipWithV3 f (a :< as) (b :< bs) (c :< cs) = f a b c :< zipWithV3 f as bs cs
+zipWithV3 _ _ _ _ = cant "zipWithV3"
 
 -- | Unzip a vector of pairs into a pair of vectors
 unzipV :: Vec n (a,b) -> (Vec n a, Vec n b)
