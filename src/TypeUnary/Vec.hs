@@ -23,7 +23,7 @@ module TypeUnary.Vec
   (
     module TypeUnary.Nat
   -- * Vectors
-  , Vec(..), headV, tailV, joinV, (<+>), indices, iota
+  , Vec(..), unConsV, headV, tailV, joinV, (<+>), indices, iota
   , Vec0,Vec1,Vec2,Vec3,Vec4,Vec5,Vec6,Vec7,Vec8,Vec9
   , Vec10,Vec11,Vec12,Vec13,Vec14,Vec15,Vec16
   , vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8
@@ -69,6 +69,10 @@ infixr 5 :<
 data Vec :: * -> * -> * where
   ZVec :: Vec Z a 
   (:<) :: a -> Vec n a -> Vec (S n) a
+
+-- | Type-safe un-cons for vectors
+unConsV :: Vec (S n) a -> (a, Vec n a)
+unConsV (a :< as) = (a,as)
 
 -- | Type-safe head for vectors
 headV :: Vec (S n) a -> a
