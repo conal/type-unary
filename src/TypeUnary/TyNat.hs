@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies, TypeOperators, EmptyDataDecls #-}
 {-# LANGUAGE UndecidableInstances #-} -- for :*:
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -20,11 +21,12 @@ module TypeUnary.TyNat
   , N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16
   ) where
 
+import Data.Typeable (Typeable)
 
 -- | Type-level representation of zero
-data Z
+data Z    deriving Typeable
 -- | Type-level representation of successor
-data S n
+data S n  deriving Typeable
 
 -- INSTANCE_TYPEABLE0(Z,zTC ,"Z")
 -- INSTANCE_TYPEABLE1(S,sTC ,"S")

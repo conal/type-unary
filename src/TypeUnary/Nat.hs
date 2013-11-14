@@ -35,6 +35,7 @@ import Prelude hiding (foldr,sum)
 
 import Control.Applicative ((<$>))
 import Data.Maybe (isJust)
+import Data.Typeable (Typeable)
 
 import Data.Proof.EQ
 
@@ -281,7 +282,10 @@ noIndex meth = error (meth ++ ": no method for Index n. Sorry.")
 --------------------------------------------------------------------}
 
 -- | Is @n@ a natural number type?
-class IsNat n where nat :: Nat n
+class Typeable n => IsNat n where nat :: Nat n
 
 instance            IsNat Z     where nat = Zero
 instance IsNat n => IsNat (S n) where nat = Succ nat
+
+-- The Typeable superclass enables client code to deduce Typeable from IsNat.
+-- Occasionally useful.
