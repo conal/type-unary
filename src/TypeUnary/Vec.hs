@@ -517,6 +517,11 @@ lengthV (a :< as) = Succ (lengthV as)
 
 -}
 
+-- resplit :: (Vec m a, Vec n a) -> (Vec n a, Vec m a)
+-- resplit (u,v) = split (u <+> v)
+-- 
+-- Won't type-check without commutativity of addition. :(
+
 {-
 
 -- Reversal. Thinking about this one. Currently thwarted by missing
