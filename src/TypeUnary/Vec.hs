@@ -5,7 +5,6 @@
            , ScopedTypeVariables, CPP
            , RankNTypes
            , MultiParamTypeClasses, FunctionalDependencies
-           , DeriveDataTypeable
   #-}
 {-# OPTIONS_GHC -Wall #-}
 
@@ -49,7 +48,7 @@ import Data.Monoid (Monoid(..))
 import Control.Applicative (Applicative(..),liftA2,(<$>))
 import Data.Foldable (Foldable(..),toList,sum) -- ,and
 import Data.Traversable (Traversable(..))
-import Data.Typeable (Typeable)
+-- import Data.Typeable (Typeable)
 
 import Foreign.Storable
 import Foreign.Ptr (Ptr,plusPtr,castPtr)
@@ -71,7 +70,7 @@ infixr 5 :<
 data Vec :: * -> * -> * where
   ZVec :: Vec Z a 
   (:<) :: a -> Vec n a -> Vec (S n) a
- deriving Typeable
+--  deriving Typeable
 
 -- | Type-safe un-cons for vectors
 unConsV :: Vec (S n) a -> (a, Vec n a)
