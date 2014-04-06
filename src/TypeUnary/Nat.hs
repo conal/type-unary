@@ -270,6 +270,7 @@ instance IsNat n => Num (Index n) where
   (*)    = noIndex "(*)"
   abs    = noIndex "abs"
   signum = noIndex "signum"
+  negate = noIndex "negate"
 
 noIndex :: String -> a
 noIndex meth = error (meth ++ ": no method for Index n. Sorry.")
