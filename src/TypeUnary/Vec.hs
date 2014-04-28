@@ -54,6 +54,8 @@ import Data.Typeable (Typeable)
 import Foreign.Storable
 import Foreign.Ptr (Ptr,plusPtr,castPtr)
 
+import Control.Newtype (Newtype(..))
+
 import Data.VectorSpace
 
 import TypeUnary.Nat
@@ -211,6 +213,13 @@ instance Traversable (Vec n) where
   traverse _ ZVec      = pure ZVec
   traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
 
+instance Newtype (Vec Z a) () where
+  pack () = ZVec
+  unpack ZVec = ()
+
+instance Newtype (Vec (S n) a) (a,Vec n a) where
+  pack = uncurry (:<)
+  unpack = unConsV
 
 instance (IsNat n, Num a) => AdditiveGroup (Vec n a) where
   { zeroV = pure 0; (^+^) = liftA2 (+) ; negateV = fmap negate }
