@@ -151,6 +151,11 @@ instance Ord a => Ord (Vec n a) where
 --   compare' :: (IsNat n, Ord a) => Vec n a -> Vec n a -> Ordering
 --   compare' = (fmap.fmap) fold (liftA2 compare)
 
+-- instance Show (Vec Z a) where
+--   show _ = "ZVec"
+
+-- instance Show a => Show (Vec (S n) a) where
+--   show v = "elemsV " ++ show (toList v)
 
 instance Show a => Show (Vec n a) where
   show v = "elemsV " ++ show (toList v)
@@ -250,7 +255,7 @@ infixl 1 <+>
 (<+>) :: Vec m a -> Vec n a -> Vec (m :+: n) a
 ZVec     <+> v = v
 (a :< u) <+> v = a :< (u <+> v)
-
+{-# INLINE (<+>) #-}
 
 peekV :: (IsNat n, Storable a) => Ptr a -> IO (Vec n a)
 peekV = peekV' nat
