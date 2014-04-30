@@ -173,6 +173,7 @@ instance (IsNat n, Monoid a) => Monoid (Vec n a) where
 instance Functor (Vec n) where
   fmap _ ZVec     = ZVec
   fmap f (a :< u) = f a :< fmap f u
+  {-# INLINE fmap #-}
 
 instance IsNat n => Applicative (Vec n) where
   pure  = pureV
@@ -213,10 +214,12 @@ joinV _ = cant "joinV"
 instance Foldable (Vec n) where
   foldr _  b ZVec     = b
   foldr h b (a :< as) = a `h` foldr h b as
+  {-# INLINE foldr #-}
 
 instance Traversable (Vec n) where
   traverse _ ZVec      = pure ZVec
   traverse f (a :< as) = liftA2 (:<) (f a) (traverse f as)
+  {-# INLINE traverse #-}
 
 instance Newtype (Vec Z a) () where
   pack () = ZVec
