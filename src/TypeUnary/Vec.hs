@@ -176,8 +176,8 @@ instance Functor (Vec n) where
   {-# INLINE fmap #-}
 
 instance IsNat n => Applicative (Vec n) where
-  pure  = pureV
-  (<*>) = applyV
+  pure  = pureV    {-# INLINE pure  #-}
+  (<*>) = applyV   {-# INLINE (<*>) #-}
 
 pureV :: IsNat n => a -> Vec n a
 pureV = pureV' nat
@@ -190,6 +190,7 @@ applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
 ZVec      `applyV` ZVec      = ZVec
 (f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
 _ `applyV` _ = cant "applyV"
+{-# INLINE applyV #-}
 
 -- Without -fno-warn-incomplete-patterns above,
 -- the previous two instances lead to warnings about non-exhaustive
