@@ -176,8 +176,10 @@ instance Functor (Vec n) where
   {-# INLINE fmap #-}
 
 instance IsNat n => Applicative (Vec n) where
-  pure  = pureV    {-# INLINE pure  #-}
-  (<*>) = applyV   {-# INLINE (<*>) #-}
+  pure  = pureV
+  {-# INLINE pure  #-}
+  (<*>) = applyV
+  {-# INLINE (<*>) #-}
 
 pureV :: IsNat n => a -> Vec n a
 pureV = pureV' nat
