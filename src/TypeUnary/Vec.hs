@@ -75,14 +75,17 @@ data Vec :: * -> * -> * where
 -- | Type-safe un-cons for vectors
 unConsV :: Vec (S n) a -> (a, Vec n a)
 unConsV (a :< as) = (a,as)
+{-# INLINE unConsV #-}
 
 -- | Type-safe head for vectors
 headV :: Vec (S n) a -> a
 headV (a :< _) = a
+{-# INLINE headV #-}
 
 -- | Type-safe tail for vectors
 tailV :: Vec (S n) a -> Vec n a
 tailV (_ :< as') = as'
+{-# INLINE tailV #-}
 
 -- TODO: when haddock is fixed, reinstate per-ctor haddock comments and
 -- remove the constructor comments in the data doc.
@@ -180,15 +183,18 @@ instance IsNat n => Applicative (Vec n) where
 
 pureV :: IsNat n => a -> Vec n a
 pureV = pureV' nat
+{-# INLINE pureV #-}
 
 pureV' :: Nat n -> a -> Vec n a
 pureV' Zero     _ = ZVec
 pureV' (Succ n) a = a :< pureV' n a
+{-# INLINE pureV' #-}
 
 applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
 ZVec      `applyV` ZVec      = ZVec
 (f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
 _ `applyV` _ = cant "applyV"
+{-# INLINE applyV #-}
 
 -- Without -fno-warn-incomplete-patterns above,
 -- the previous two instances lead to warnings about non-exhaustive
@@ -209,6 +215,7 @@ joinV :: Vec n (Vec n a) -> Vec n a
 joinV ZVec = ZVec
 joinV ((a :< _) :< vs) = a :< joinV (tailV <$> vs)
 joinV _ = cant "joinV"
+{-# INLINE joinV #-}
 
 instance Foldable (Vec n) where
   foldr _  b ZVec     = b
@@ -254,10 +261,13 @@ instance (IsNat n, Storable a) => Storable (Vec n a) where
 
 infixl 1 <+>
 -- | Concatenation of vectors
-(<+>) :: Vec m a -> Vec n a -> Vec (m :+: n) a
-ZVec     <+> v = v
-(a :< u) <+> v = a :< (u <+> v)
-{-# INLINE (<+>) #-}
+(<+>) :: IsNat m => Vec m a -> Vec n a -> Vec (m :+: n) a
+u <+> v = appendN nat u v
+
+appendN :: Nat m -> Vec m a -> Vec n a -> Vec (m :+: n) a
+appendN Zero _ v = v
+appendN (Succ n) u v = headV u :< (appendN n (tailV u) v)
+{-# INLINE appendN #-}
 
 peekV :: (IsNat n, Storable a) => Ptr a -> IO (Vec n a)
 peekV = peekV' nat
@@ -439,10 +449,10 @@ setI = set . coerceToIndex
 --------------------------------------------------------------------}
 
 -- | Flatten a vector of vectors (a 2D array) into a vector
-flattenV :: IsNat n => Vec n (Vec m a) -> Vec (n :*: m) a
+flattenV :: (IsNat n, IsNat m) => Vec n (Vec m a) -> Vec (n :*: m) a
 flattenV = flattenV' nat
 
-flattenV' :: Nat n -> Vec n (Vec m a) -> Vec (n :*: m) a
+flattenV' :: (IsNat n, IsNat m) => Nat n -> Vec n (Vec m a) -> Vec (n :*: m) a
 flattenV' Zero _               = ZVec
 flattenV' (Succ n') (v :< vs') = v <+> flattenV' n' vs'
 flattenV' _ _ = error "flattenV': GHC doesn't know this case can't happen."
@@ -592,34 +602,43 @@ t3 = swizzle t2 t1
 
 -- | Zip two vectors into one. Like @'liftA2' '(,)'@, but the former requires
 -- @IsNat n@.
-zipV :: Vec n a -> Vec n b -> Vec n (a,b)
+zipV :: IsNat n => Vec n a -> Vec n b -> Vec n (a,b)
 zipV = zipWithV (,)
+{-# INLINE zipV #-}
 
 -- | Zip three vectors into one. Like @'liftA3' '(,)'@, but the former requires
 -- @IsNat n@.
 zipV3 :: Vec n a -> Vec n b -> Vec n c -> Vec n (a,b,c)
 zipV3 = zipWithV3 (,,)
+{-# INLINE zipV3 #-}
 
 -- | Unzip one vector into two. Like 'liftA2', but the former requires
 -- @IsNat n@.
-zipWithV :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
-zipWithV _ ZVec      ZVec      = ZVec
-zipWithV f (a :< as) (b :< bs) = f a b :< zipWithV f as bs
-zipWithV _ _ _ = cant "zipWithV"
+zipWithN :: (a -> b -> c) -> Nat n -> Vec n a -> Vec n b -> Vec n c
+zipWithN _ Zero _ _ = ZVec
+zipWithN f (Succ n) a b = f (headV a) (headV b) :< zipWithN f n (tailV a) (tailV b)
+{-# INLINE zipWithN #-}
+
+zipWithV :: IsNat n => (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
+zipWithV f a b = zipWithN f nat a b
+{-# INLINE zipWithV #-}
 
 -- | Unzip one vector into two. Like 'liftA2', but the former requires
 -- @IsNat n@.
+{-# INLINE zipWithV3 #-}
 zipWithV3 :: (a -> b -> c -> d) -> Vec n a -> Vec n b -> Vec n c -> Vec n d
 zipWithV3 _ ZVec      ZVec      ZVec      = ZVec
 zipWithV3 f (a :< as) (b :< bs) (c :< cs) = f a b c :< zipWithV3 f as bs cs
 zipWithV3 _ _ _ _ = cant "zipWithV3"
 
 -- | Unzip a vector of pairs into a pair of vectors
+{-# INLINE unzipV #-}
 unzipV :: Vec n (a,b) -> (Vec n a, Vec n b)
 unzipV ZVec = (ZVec,ZVec)
 unzipV ((a,b) :< ps) = (a :< as, b :< bs) where (as,bs) = unzipV ps
 
 -- | Unzip a vector of pairs into a pair of vectors
+{-# INLINE unzipV3 #-}
 unzipV3 :: Vec n (a,b,c) -> (Vec n a, Vec n b, Vec n c)
 unzipV3 ZVec = (ZVec,ZVec,ZVec)
 unzipV3 ((a,b,c) :< ps) = (a :< as, b :< bs, c :< cs) 
@@ -646,6 +665,7 @@ instance ToVec (Vec n a) n a where toVec = id
 instance IsNat n => ToVec [a] n a where
   toVec = toVecL nat
 
+{-# INLINE toVecL #-}
 toVecL :: Nat n -> [a] -> Vec n a
 toVecL Zero [] = ZVec
 toVecL (Succ m) (a:as) = a :< toVecL m as
