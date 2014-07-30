@@ -18,7 +18,7 @@ module TypeUnary.Nat
   (
     module TypeUnary.TyNat
   -- * Value-typed natural numbers
-  , Nat(..), zero, one, two, three, four
+  , Nat(..), predN, zero, one, two, three, four
   , withIsNat, natSucc, natIsNat
   , natToZ, natEq, natAdd, natMul
   , IsNat(..)
@@ -60,6 +60,9 @@ natSucc = withIsNat Succ
 natIsNat :: Nat n -> (IsNat n => Nat n)
 natIsNat Zero     = Zero
 natIsNat (Succ n) = Succ n
+
+predN :: Nat (S n) -> Nat n
+predN (Succ n) = n
 
 {-
 
