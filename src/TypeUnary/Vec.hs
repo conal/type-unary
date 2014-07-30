@@ -176,28 +176,41 @@ instance Functor (Vec n) where
   {-# INLINE fmap #-}
 
 instance IsNat n => Applicative (Vec n) where
-  pure  = pureV
+  pure  = pureV nat
+  (<*>) = applyV nat
   {-# INLINE pure  #-}
-  (<*>) = applyV
   {-# INLINE (<*>) #-}
 
-pureV :: IsNat n => a -> Vec n a
-pureV = pureV' nat
+pureV :: Nat n -> a -> Vec n a
+pureV Zero     _ = ZVec
+pureV (Succ n) a = a :< pureV n a
+{-# INLINE pureV #-}
 
-pureV' :: Nat n -> a -> Vec n a
-pureV' Zero     _ = ZVec
-pureV' (Succ n) a = a :< pureV' n a
+-- Experiment
 
-applyV :: Vec n (a -> b) -> Vec n a -> Vec n b
-ZVec      `applyV` ZVec      = ZVec
-(f :< fs) `applyV` (x :< xs) = f x :< (fs `applyV` xs)
-_ `applyV` _ = cant "applyV"
+inVecS :: ((a, Vec n a) -> (b, Vec n b)) -> (Vec (S n) a -> Vec (S n) b)
+inVecS f = uncurry (:<) . f . unConsV
+
+inVecS2 :: ((a, Vec n a) -> (b, Vec n b) -> (c, Vec n c))
+        -> (Vec (S n) a  -> Vec (S n) b  -> Vec (S n) c )
+inVecS2 f = inVecS . f . unConsV
+
+-- TODO: reconcile unConsV vs unVecS
+
+applyV :: Nat n -> Vec n (a -> b) -> Vec n a -> Vec n b
+applyV Zero     = \ _      _      -> ZVec
+applyV (Succ n) = inVecS2 (\ (f,fs) (x,xs) -> (f x , applyV n fs xs))
 {-# INLINE applyV #-}
 
--- Without -fno-warn-incomplete-patterns above,
--- the previous two instances lead to warnings about non-exhaustive
--- pattern matches, although the other possibilities
--- are type-incorrect.  According to SLPJ:
+-- applyV :: Nat n -> Vec n (a -> b) -> Vec n a -> Vec n b
+-- applyV Zero     = \ ZVec      ZVec      -> ZVec
+-- applyV (Succ n) = \ (f :< fs) (x :< xs) -> f x :< applyV n fs xs
+-- {-# INLINE applyV #-}
+
+-- The "= \ ..." form here side-steps the incomplete patterns warning without
+-- -fno-warn-incomplete-patterns above. Otherwise we get warnings about
+-- non-exhaustive pattern matches, although the other possibilities are
+-- type-incorrect. Once upon a time SLPJ said
 -- 
 --   The overlap warning checker simply doesn't take account of GADTs.
 --   There's a long-standing project suggestion to fix this:
