@@ -45,7 +45,7 @@ module TypeUnary.Vec
 
 import Prelude hiding (foldr,sum,and)
 
-import Data.Monoid (Monoid(..))
+import Data.Monoid (Monoid(..),(<>))
 import Control.Applicative (Applicative(..),liftA2,(<$>))
 import Data.Foldable (Foldable(..),toList,sum) -- ,and
 import Data.Traversable (Traversable(..))
@@ -228,9 +228,9 @@ joinV ((a :< _) :< vs) = a :< joinV (tailV <$> vs)
 joinV _ = cant "joinV"
 
 instance Foldable (Vec n) where
-  foldr _  b ZVec     = b
-  foldr h b (a :< as) = a `h` foldr h b as
-  {-# INLINE foldr #-}
+  foldMap _ ZVec      = mempty
+  foldMap h (a :< as) = h a <> foldMap h as
+  {-# INLINE foldMap #-}
 
 instance Traversable (Vec n) where
   traverse _ ZVec      = pure ZVec
