@@ -1,6 +1,10 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+
+-- Experiment
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds, CPP #-}
+
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -23,6 +27,7 @@ module TypeUnary.Nat
   , natToZ, natEq, natAdd, natMul
   , IsNat(..)
   , induction
+  , PlusZero, plusZero
   -- * Inequality proofs and indices
   , (:<:)(..), succLim
   , Index(..), unIndex, succI, index0, index1, index2, index3
@@ -36,6 +41,8 @@ import Prelude hiding (foldr,sum)
 import Control.Applicative ((<$>))
 import Data.Maybe (isJust)
 import Data.Typeable (Typeable)
+
+import Data.Constraint (Dict(..))
 
 import Data.Proof.EQ
 
@@ -121,17 +128,28 @@ four = Succ three
 -- from IsNat.
 
 -- | Peano's induction principle
-induction :: forall p. 
-             p Z -> (forall n. IsNat n => p n -> p (S n))
-          -> (forall n. IsNat n => p n)
-induction z s = go nat
+induction :: forall p . 
+             p Z => (forall n. IsNat n => Dict (p n) -> Dict (p (S n)))
+          -> (forall n. IsNat n => Dict (p n))
+induction s = go nat
  where
-   -- morphism over z & s.
-   go :: forall n. Nat n -> p n
-   go Zero     = z
+   go :: forall n. Nat n -> Dict (p n)
+   go Zero     = Dict
    go (Succ m) = s (go m)
 
--- TODO: Use induction for n + Z == n. Then associativity and commutativity.
+class    (n :+: Z) ~ n => PlusZero n
+instance (n :+: Z) ~ n => PlusZero n
+
+plusZero :: IsNat n => Dict (PlusZero n)
+plusZero = induction (\ Dict -> Dict)
+
+#if 0
+class    ((p :+: q) :+: r) ~ (p :+: (q :+: r)) => PlusAssocR p q r
+instance ((p :+: q) :+: r) ~ (p :+: (q :+: r)) => PlusAssocR p q r
+
+plusAssocR :: (IsNat p, IsNat q, IsNat r) => Dict (PlusAssocR p q r)
+plusAssocR ...
+#endif
 
 {--------------------------------------------------------------------
     Inequality proofs
