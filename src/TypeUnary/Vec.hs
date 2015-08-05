@@ -56,6 +56,8 @@ import Foreign.Ptr (Ptr,plusPtr,castPtr)
 
 import Control.Newtype (Newtype(..))
 
+-- import Data.Constraint
+
 import Data.VectorSpace
 
 import TypeUnary.Nat
@@ -555,15 +557,41 @@ lengthV (a :< as) = Succ (lengthV as)
 -- 
 -- Won't type-check without commutativity of addition. :(
 
-{-
+#if 0
+
+addZ :: IsNat n => Dict (n ~ (n :+: Z))
+addZ = addZ' nat
+
+addZ' :: Nat n -> Dict (n ~ (n :+: Z))
+addZ' Zero                       = Dict
+addZ' (Succ m) | Dict <- addZ' m = Dict
+
+add1 :: IsNat m => Dict ((m :+: S Z) ~ S m)
+add1 = add1' nat
+
+add1' :: Nat m -> Dict ((m :+: S Z) ~ S m)
+add1' Zero                       = Dict
+add1' (Succ m) | Dict <- add1' m = Dict
+
+-- addS :: (IsNat m, IsNat n) => Dict ((m :+: S n) ~ S (m :+: n))
+-- addS = addS' nat
+
+addS' :: IsNat m => Nat n -> Dict ((m :+: S n) ~ S (m :+: n))
+addS' Zero | Dict <- add1 = Dict
+...
+
+-- Oops: non-injectivity
 
 -- Reversal. Thinking about this one. Currently thwarted by missing
 -- knowledge about numbers in the type-checker. Would be easy with
 -- built-in type-level naturals.
 
 -- | Reverse a vector
-reverseV :: Vec n a -> Vec n a
-reverseV = reverse' nat ZVec
+reverseV :: forall n a. IsNat n => Vec n a -> Vec n a
+reverseV | Dict <- (addZ :: Dict (n ~ (n :+: Z))) = reverse' nat ZVec
+
+-- reverseV :: Vec n a -> Vec n a
+-- reverseV = reverse' nat ZVec
 
 --  Couldn't match type `n' with `n :+: Z'
 
@@ -573,7 +601,7 @@ reverse' Zero     ma ZVec      = ma
 reverse' (Succ n) ma (a :< as) = reverse' n (a :< ma) as
 
 -- Could not deduce ((n1 :+: S m) ~ S (n1 :+: m))
--}
+#endif
 
 -- | Delete exactly one occurrence of an element from a vector, raising an
 -- error if the element isn't present.
@@ -662,11 +690,13 @@ instance ToVec (Vec n a) n a where toVec = id
 
 instance IsNat n => ToVec [a] n a where
   toVec = toVecL nat
+  {-# INLINE toVec #-}
 
 toVecL :: Nat n -> [a] -> Vec n a
 toVecL Zero [] = ZVec
 toVecL (Succ m) (a:as) = a :< toVecL m as
 toVecL _ _ = error "toVecL: length mismatch"
+{-# INLINE toVecL #-}
 
 {--------------------------------------------------------------------
     Misc
