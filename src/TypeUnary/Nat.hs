@@ -88,9 +88,10 @@ withIsNat' p n = case natIsNat' n of
 -}
 
 -- | Interpret a 'Nat' as a plain number
-natToZ :: (Enum a, Num a) => Nat n -> a
+natToZ :: Num a => Nat n -> a
 natToZ Zero     = 0
-natToZ (Succ n) = (succ . natToZ) n
+natToZ (Succ n) = ((1+) . natToZ) n
+{-# INLINE natToZ #-}
 
 -- | Equality test
 natEq :: Nat m -> Nat n -> Maybe (m :=: n)
