@@ -1,8 +1,9 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 
--- Experiment
+-- PlusZero Experiment
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds, CPP #-}
 
 {-# OPTIONS_GHC -Wall #-}
@@ -138,6 +139,7 @@ induction s = go nat
    go Zero     = Dict
    go (Succ m) = s (go m)
 
+-- Needs UndecidableInstances in GHC 7.6.3, though not in 7.8.2
 class    (n :+: Z) ~ n => PlusZero n
 instance (n :+: Z) ~ n => PlusZero n
 
