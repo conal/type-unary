@@ -39,9 +39,9 @@ import Prelude hiding (foldr,sum)
 
 -- #include "Typeable.h"
 
-import Control.Applicative ((<$>))
+-- import Control.Applicative ((<$>))
 import Data.Maybe (isJust)
-import Data.Typeable (Typeable)
+-- import Data.Typeable (Typeable)
 
 import Data.Constraint (Dict(..))
 
@@ -307,7 +307,7 @@ noIndex meth = error (meth ++ ": no method for Index n. Sorry.")
 --------------------------------------------------------------------}
 
 -- | Is @n@ a natural number type?
-class Typeable n => IsNat n where nat :: Nat n
+class IsNat n where nat :: Nat n
 
 instance            IsNat Z     where nat = Zero
 instance IsNat n => IsNat (S n) where nat = Succ nat
