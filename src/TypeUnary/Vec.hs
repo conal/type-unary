@@ -168,6 +168,12 @@ instance Show a => Show (Vec n a) where
 -- if the code generation uses Pretty instead of Show.
 
 -- The Monoid instance uses a standard recipe for applicative functors.
+
+#if MIN_VERSION_base(4,11,0)
+instance (IsNat n, Semigroup a) => Semigroup (Vec n a) where
+    (<>) = liftA2 (<>)
+#endif
+
 instance (IsNat n, Monoid a) => Monoid (Vec n a) where
   mempty  = pure mempty
   mappend = liftA2 mappend
