@@ -37,5 +37,3 @@ Library
                        TypeUnary.Vec
                        
   ghc-options:         -Wall
-
- ghc-prof-options:    -prof -auto-all 
