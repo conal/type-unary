@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- PlusZero Experiment
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds, CPP #-}
@@ -247,7 +247,7 @@ data Index lim = forall n. IsNat n => Index (n :<: lim) (Nat n)
 -- TODO: Consider removing the Nat n field, since it's computable from
 -- IsNat n or n :<: lim.
 
-unIndex :: (Num a, Enum a) => Index m -> a
+unIndex :: Num a => Index m -> a
 unIndex (Index _ j) = natToZ j
 
 instance Eq (Index lim) where
