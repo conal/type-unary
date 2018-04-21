@@ -1,5 +1,5 @@
 Name:                type-unary
-Version:             0.3.0
+Version:             0.3.1
 Cabal-Version:       >= 1.6
 Synopsis:            
   Type-level and typed unary natural numbers, inequality proofs, vectors
@@ -27,7 +27,7 @@ Library
   Extensions:
   Build-Depends:       base >=4 && < 5
                      , constraints
-                     , newtype >= 0.2
+                     , newtype-generics
                      , ty >= 0.1.5
                      , vector-space
                      , applicative-numbers
